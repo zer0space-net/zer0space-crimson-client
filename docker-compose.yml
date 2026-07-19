@@ -1,0 +1,41 @@
+# CrimsonHaven — web client (static frontend).
+#
+# STATUS: paused, kept deployable. See the header of the compose file in
+# zer0space-crimson-backend for the full set of caveats — in particular the
+# Cloudflare ToS §2.8 note on video streaming, and the image namespace still
+# pointing at the old personal account.
+#
+# This repo is meant to hold the frontend source alongside this deploy stack.
+# No CI workflow yet, deliberately: there is no source here to build. Add it in
+# the same commit as the source, and switch the image below to
+# ghcr.io/zer0space-net/zer0space-crimson-client at the same time.
+#
+# Stateless: no volumes, nothing to persist, and therefore no placement
+# constraint. Unlike the backend this can run on any node.
+
+services:
+  client:
+    image: ghcr.io/sige0/crimson-client:latest
+    networks:
+      - cloudflared_proxy
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 32M
+      update_config:
+        # start-first: bring the new task up before stopping the old one, so a
+        # redeploy of the public frontend causes no visible downtime.
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      restart_policy:
+        condition: on-failure
+
+networks:
+  cloudflared_proxy:
+    external: true
