@@ -1,4 +1,8 @@
-# CrimsonHaven — web client (static frontend).
+# Crimson Haven — web client (static frontend).
+#
+# CREDIT: Crimson Haven is developed at https://github.com/crimsonhaven-to — the
+# application source and the image referenced below originate there. This file is
+# only the zer0space deploy stack for running it on the homelab Swarm.
 #
 # STATUS: paused, kept deployable. See the header of the compose file in
 # zer0space-crimson-backend for the full set of caveats — in particular the

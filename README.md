@@ -1,6 +1,11 @@
 # zer0space-crimson-client
 
-CrimsonHaven web client — the static frontend.
+Crimson Haven web client — the static frontend.
+
+> **Credit where it is due.** Crimson Haven is developed at
+> **[crimsonhaven-to](https://github.com/crimsonhaven-to)** — the frontend
+> application source and the container image originate there, not here. This repo
+> holds the zer0space deploy stack for running it on the homelab Swarm.
 
 > **Project paused.** The deploy stack is kept here so it can be picked back up
 > without reconstructing it. Application source is not in this repo yet.
@@ -48,7 +53,20 @@ This repo is meant to end up like [`zer0space-dashboard`](https://github.com/zer
 source, `Dockerfile`, compose and CI in one place. Right now it holds only the
 deploy stack.
 
-## Related
+## Credits
+
+**Crimson Haven** is developed at
+**[github.com/crimsonhaven-to](https://github.com/crimsonhaven-to)**. All application
+source and the container image referenced by this stack come from there. Everything
+in this repository is deployment configuration for running it on the zer0space
+homelab — none of the application itself.
+
+In the upstream design the **client** does the scraping and resolving (via
+`crimson-sources`) rather than the backend, and asks the backend only for a short
+signed link to `crimson-proxy` — so stream bytes go `CDN → proxy → viewer` and never
+through the backend at all.
+
+## Related in this org
 
 - [`zer0space-crimson-backend`](https://github.com/zer0space-net/zer0space-crimson-backend) — API, database, sync worker
-- [`zer0space-crimson-sources`](https://github.com/zer0space-net/zer0space-crimson-sources) — sources
+- [`zer0space-crimson-sources`](https://github.com/zer0space-net/zer0space-crimson-sources) — sources component
