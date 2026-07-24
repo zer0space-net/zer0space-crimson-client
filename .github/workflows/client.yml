@@ -28,9 +28,14 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      # persist-credentials:false so the zer0space-net token isn't left in git
+      # config — otherwise the submodule clone below sends it to crimsonhaven-to,
+      # which rejects it (cross-org) and fails even though the repo is public.
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
+          persist-credentials: false
+      - name: Init the crimson-sources submodule (anonymous)
+        run: git submodule update --init --recursive
 
       - uses: actions/setup-node@v4
         with:
@@ -50,7 +55,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
+          persist-credentials: false
+      - name: Init the crimson-sources submodule (anonymous)
+        run: git submodule update --init --recursive
 
       # CR_PAT (classic PAT with write:packages), matching zer0space-dashboard —
       # GITHUB_TOKEN only writes to packages linked to this exact repo.
