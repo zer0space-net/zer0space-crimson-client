@@ -1,72 +1,90 @@
-# zer0space-crimson-client
+# zer0space ✕ Crimson
 
-Crimson Haven web client — the static frontend.
+A **zer0space-styled web client for the Crimson Haven streaming backend**, served
+behind the zer0space dashboard at `zer0space.com/crimson`. The frontend (this
+repo) is built by zer0space in the zer0space design language, with May; the
+**streaming engine, sources and backend it talks to are Crimson Haven's**.
 
-> **Credit where it is due.** Crimson Haven is developed at
-> **[crimsonhaven-to](https://github.com/crimsonhaven-to)** — the frontend
-> application source and the container image originate there, not here. This repo
-> holds the zer0space deploy stack for running it on the homelab Swarm.
+> ## Credit — Crimson Haven 🩸
+>
+> Crimson Haven is developed at **[github.com/crimsonhaven-to](https://github.com/crimsonhaven-to)**
+> and the whole thing — the API, the database, the sync worker, and the
+> client-side scrape/resolve engine (`crimson-sources`) this app embeds — is their
+> work. This repository is only a **zer0space-flavoured frontend and deploy stack**
+> for running it on the homelab. All the hard streaming machinery is theirs.
+> Please point people at the upstream project.
+>
+> More about Crimson Haven: <https://crimsonhaven.org/> · <https://crimsonhaven.to/>
 
-> **Project paused.** The deploy stack is kept here so it can be picked back up
-> without reconstructing it. Application source is not in this repo yet.
+## What this is
 
-## Stack
+- A **React + Vite + TypeScript SPA** in the zer0space look (near-black space,
+  frosted glass, starfield, May) — the single accent shifted from zer0space blue
+  to **crimson**, so the whole UI reads as the crossover it is.
+- Talks to the Crimson Haven backend over a **same-origin, relative `/crimson/api`
+  base**. The zer0space dashboard reverse-proxies that to the backend, so there is
+  no CORS and no backend hostname in the bundle.
+- Embeds Crimson Haven's **`crimson-sources`** engine (as a vendored submodule) to
+  resolve streams in the viewer's browser, exactly as the upstream client does.
 
-[`docker-compose.yml`](docker-compose.yml) runs a single service: 2 replicas of the
-static frontend on the `cloudflared_proxy` network.
+## Access model — no separate login
 
-Stateless — no volumes, nothing to persist, and therefore no placement constraint.
-Unlike the backend it can run on any node.
+Crimson has **no login of its own here**. It sits *behind* zer0space: the
+dashboard gates `/crimson` on the zer0space session, so anyone signed in to
+zer0space reaches it and nobody else does. There is no Crimson sign-in screen to
+see — the zer0space session is the door. (Backend `REQUIRE_LOGIN` is handled by
+the gate; see the [backend repo](https://github.com/zer0space-net/zer0space-crimson-backend).)
 
-Updates use `order: start-first`, so a redeploy of the public frontend brings the new
-task up before stopping the old one and causes no visible downtime.
-
-## Deployment
-
-Deployed as a Portainer stack from this repository (compose path
-`docker-compose.yml`), then updated with "Pull and redeploy".
-
-The `cloudflared_proxy` overlay network must exist before the first deploy — it is
-external to every stack and created once by hand:
+## Develop
 
 ```bash
-docker network create --driver overlay --attachable cloudflared_proxy
+npm install
+git submodule update --init            # vendor/crimson-sources (engine)
+cp .env.example .env                    # point CRIMSON_API_ORIGIN at a backend
+npm run dev                             # http://localhost:5199/crimson/
+npm run build                           # tsc -b && vite build → dist/
 ```
 
-No environment variables are required.
+`vendor/crimson-sources` is Crimson Haven's engine, aliased so Vite transpiles its
+TypeScript inline (no separate build step), matching the upstream client's setup.
 
-## Notes
+## Layout
 
-- The image still publishes under the old personal namespace
-  (`ghcr.io/sige0/crimson-client`), built by the external `crimsonhaven-to` CI. Once
-  the source lands here and a workflow builds it, switch to
-  `ghcr.io/zer0space-net/zer0space-crimson-client`.
-- **No CI workflow yet, deliberately** — there is no source here to build, so a
-  workflow would fail on every push. Add it in the same commit as the source.
-- **Cloudflare ToS §2.8** prohibits continuous video streaming through the CDN.
-  Serving this UI over the tunnel is fine; media delivery must go over Tailscale.
-  Full caveats are in the [backend repo](https://github.com/zer0space-net/zer0space-crimson-backend).
+```
+src/
+  main.tsx / App.tsx      entry + router (basename /crimson)
+  lib/
+    config.ts             API base, router basename, brand constants
+    api.ts                typed Crimson Haven backend client + session token
+    ndjson.ts             incremental reader for the progressive /watch stream
+    useAsync.ts           tiny fetch hook
+  components/
+    Layout.tsx            topbar, nav, search, footer (Crimson Haven credit), May
+    Wordmark.tsx          "zer0space ✕ Crimson"
+    Starfield.tsx         canvas backdrop
+    CrimsonPlayer.tsx     hls.js / MP4 / iframe player
+    Chibi.tsx             May companion
+    ui.tsx                Poster, grids, states
+  pages/                  Home, Catalogue, Search, Overview, Watch, NotFound
+  styles/                 tokens.css (ported zer0space design system, crimson), app.css
+public/may/               May artwork (from zer0space-docs)
+vendor/crimson-sources/   Crimson Haven engine (git submodule)
+```
 
-## Intended layout
+## Status
 
-This repo is meant to end up like [`zer0space-dashboard`](https://github.com/zer0space-net/zer0space-dashboard):
-source, `Dockerfile`, compose and CI in one place. Right now it holds only the
-deploy stack.
-
-## Credits
-
-**Crimson Haven** is developed at
-**[github.com/crimsonhaven-to](https://github.com/crimsonhaven-to)**. All application
-source and the container image referenced by this stack come from there. Everything
-in this repository is deployment configuration for running it on the zer0space
-homelab — none of the application itself.
-
-In the upstream design the **client** does the scraping and resolving (via
-`crimson-sources`) rather than the backend, and asks the backend only for a short
-signed link to `crimson-proxy` — so stream bytes go `CDN → proxy → viewer` and never
-through the backend at all.
+The frontend source lives here now. Still to come (tracked): the `crimson-sources`
+submodule wiring for E1–E3 client resolving, account/progress sync, the
+`Dockerfile` + GitHub Actions image build, and the dashboard-side gate/proxy. The
+`docker-compose.yml` still references the upstream image until the CI here builds
+`ghcr.io/zer0space-net/zer0space-crimson-client`.
 
 ## Related in this org
 
-- [`zer0space-crimson-backend`](https://github.com/zer0space-net/zer0space-crimson-backend) — API, database, sync worker
-- [`zer0space-crimson-sources`](https://github.com/zer0space-net/zer0space-crimson-sources) — sources component
+- [`zer0space-crimson-backend`](https://github.com/zer0space-net/zer0space-crimson-backend) — API, database, sync worker (deploy stack)
+- [`zer0space-crimson-sources`](https://github.com/zer0space-net/zer0space-crimson-sources) — the sources component
+
+---
+
+*Crimson Haven is a project by **[crimsonhaven-to](https://github.com/crimsonhaven-to)**.
+zer0space ✕ Crimson is a homelab frontend for it, not a fork or a replacement.*
