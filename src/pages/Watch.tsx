@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
-import { api, type StreamLine, type WatchLine } from "../lib/api";
+import { api, type Kind, type StreamLine, type WatchLine } from "../lib/api";
 import CrimsonPlayer from "../components/CrimsonPlayer";
 
 // Consumes the progressive /watch NDJSON: each source is surfaced as a chip the
@@ -53,6 +53,31 @@ export default function Watch() {
         setStatus((s) => (s === "error" ? s : "done"));
       } catch (err) {
         if (!ac.signal.aborted) setStatus("error");
+      }
+    })();
+
+    // In parallel, resolve sources client-side (E1–E3). These are merged into the
+    // same list and deduped against the backend's; if nothing runs client-side or
+    // it fails, the backend stream above stays the floor.
+    (async () => {
+      try {
+        // Lazy-loaded so the heavy resolve engine only downloads on a watch page.
+        const { clientStreams } = await import("../lib/clientSources");
+        for await (const line of clientStreams(
+          kind as Kind,
+          numId,
+          season,
+          episode,
+          ac.signal,
+        )) {
+          const sl: StreamLine = { ...line, origin: "client" };
+          const key = `${sl.source}|${sl.url}`;
+          if (seen.current.has(key)) continue;
+          seen.current.add(key);
+          setSources((prev) => [...prev, sl]);
+        }
+      } catch {
+        /* client engine is best-effort */
       }
     })();
 

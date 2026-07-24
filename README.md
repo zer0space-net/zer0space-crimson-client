@@ -85,9 +85,10 @@ Vite build → nginx with SPA fallback).
 
 Frontend source, `Dockerfile`, nginx, CI and the gated deploy stack are in place;
 the dashboard-side gate/proxy lives in `zer0space-dashboard` (`src/crimson.py`).
-Still to come (tracked): the `crimson-sources` submodule wiring for E1–E3 client
-resolving, and per-user account/progress sync via the zer0space→Crimson SSO
-bridge.
+The `crimson-sources` engine is wired in (`src/lib/clientSources.ts`,
+lazy-loaded on the watch page) so E1–E3 sources resolve in the browser and merge
+with the backend's. Still to come (tracked): per-user account/progress sync via
+the zer0space→Crimson SSO bridge.
 
 ## Related in this org
 
