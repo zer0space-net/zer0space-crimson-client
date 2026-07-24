@@ -71,13 +71,23 @@ public/may/               May artwork (from zer0space-docs)
 vendor/crimson-sources/   Crimson Haven engine (git submodule)
 ```
 
+## Deploy
+
+Crimson runs as three stacks behind the zer0space dashboard gate — see
+**[DEPLOY.md](DEPLOY.md)** for the full runbook. In short: create the shared
+`crimson_net` overlay, deploy the backend + this client onto it, then point the
+dashboard's `CRIMSON_CLIENT_URL` / `CRIMSON_API_URL` at them. The image is built
+by [`.github/workflows/client.yml`](.github/workflows/client.yml) to
+`ghcr.io/zer0space-net/zer0space-crimson-client` (multi-stage `Dockerfile`:
+Vite build → nginx with SPA fallback).
+
 ## Status
 
-The frontend source lives here now. Still to come (tracked): the `crimson-sources`
-submodule wiring for E1–E3 client resolving, account/progress sync, the
-`Dockerfile` + GitHub Actions image build, and the dashboard-side gate/proxy. The
-`docker-compose.yml` still references the upstream image until the CI here builds
-`ghcr.io/zer0space-net/zer0space-crimson-client`.
+Frontend source, `Dockerfile`, nginx, CI and the gated deploy stack are in place;
+the dashboard-side gate/proxy lives in `zer0space-dashboard` (`src/crimson.py`).
+Still to come (tracked): the `crimson-sources` submodule wiring for E1–E3 client
+resolving, and per-user account/progress sync via the zer0space→Crimson SSO
+bridge.
 
 ## Related in this org
 
