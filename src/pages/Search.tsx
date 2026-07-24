@@ -1,20 +1,14 @@
 import { useSearchParams } from "react-router-dom";
-import { api, type MediaSummary } from "../lib/api";
+import { api, type Kind, type MediaCard } from "../lib/api";
 import { useAsync } from "../lib/useAsync";
 import { Spinner, ErrorBox, PosterGrid, Empty } from "../components/ui";
 
-// Searches all three backend indexes in parallel and tags each result with its
-// media type so the poster links route to the right overview.
-async function searchAll(q: string, signal: AbortSignal): Promise<MediaSummary[]> {
-  const kinds: { k: "anime" | "shows" | "movies"; t: MediaSummary["mediaType"] }[] = [
-    { k: "anime", t: "anime" },
-    { k: "shows", t: "tv" },
-    { k: "movies", t: "movie" },
-  ];
+// Searches all three backend indexes in parallel; api.search tags each result
+// with its kind so the poster links route to the right overview.
+async function searchAll(term: string, signal: AbortSignal): Promise<MediaCard[]> {
+  const kinds: Kind[] = ["anime", "show", "movie"];
   const settled = await Promise.allSettled(
-    kinds.map(async ({ k, t }) =>
-      (await api.search(k, q, signal)).map((m) => ({ ...m, mediaType: m.mediaType ?? t })),
-    ),
+    kinds.map((k) => api.search(k, term, signal)),
   );
   return settled.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
 }

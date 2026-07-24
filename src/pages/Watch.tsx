@@ -14,8 +14,11 @@ export default function Watch() {
 
   const [sources, setSources] = useState<StreamLine[]>([]);
   const [active, setActive] = useState(0);
-  const [status, setStatus] = useState<"loading" | "streaming" | "done" | "error">("loading");
+  const [status, setStatus] = useState<
+    "loading" | "streaming" | "done" | "error" | "unaired"
+  >("loading");
   const [title, setTitle] = useState<string>("");
+  const [airDate, setAirDate] = useState<string | null>(null);
   const seen = useRef(new Set<string>());
 
   const numId = Number(id);
@@ -35,13 +38,16 @@ export default function Watch() {
           if (line.type === "meta") {
             if (line.title) setTitle(line.title);
             setStatus("streaming");
+          } else if (line.type === "unaired") {
+            setAirDate(line.air_date);
+            setStatus("unaired");
           } else if (line.type === "stream") {
             const key = `${line.source}|${line.url}`;
             if (seen.current.has(key)) continue;
             seen.current.add(key);
             setSources((prev) => [...prev, line]);
           } else if (line.type === "done") {
-            setStatus("done");
+            setStatus((s) => (s === "unaired" ? s : "done"));
           }
         }
         setStatus((s) => (s === "error" ? s : "done"));
@@ -82,6 +88,12 @@ export default function Watch() {
           <div className="player-empty">
             {status === "error" ? (
               <span>Keine Quelle erreichbar.</span>
+            ) : status === "unaired" ? (
+              <span>
+                Noch nicht ausgestrahlt{airDate ? ` — geplant für ${airDate}` : ""}.
+              </span>
+            ) : status === "done" ? (
+              <span>Keine Quelle gefunden.</span>
             ) : (
               <div className="row gap-10">
                 <div className="spinner spin" />
@@ -103,7 +115,6 @@ export default function Watch() {
             >
               <span>{s.source}</span>
               {s.language && <span className="lang">{s.language}</span>}
-              {s.quality && <span className="lang">{s.quality}</span>}
               <span className="source-origin">{s.origin === "client" ? "lokal" : s.streamType}</span>
             </button>
           ))}

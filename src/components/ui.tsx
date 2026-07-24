@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { MediaSummary } from "../lib/api";
+import type { MediaCard } from "../lib/api";
 
 export function Spinner({ label }: { label?: string }) {
   return (
@@ -31,17 +31,18 @@ export function Empty({ children }: { children: React.ReactNode }) {
   return <div className="empty">{children}</div>;
 }
 
-// Route a summary to its overview page. Anime is AniList-keyed, everything else
-// TMDB-keyed — mirrors the backend's own keying.
-function titleHref(m: MediaSummary): string {
-  if (m.mediaType === "anime" && m.anilist_id) return `/title/anime/${m.anilist_id}`;
-  if (m.mediaType === "movie" && m.tmdb_id) return `/title/movie/${m.tmdb_id}`;
-  if (m.tmdb_id) return `/title/show/${m.tmdb_id}`;
+// Route a card to its overview page. Anime is AniList-keyed, show/movie TMDB-keyed
+// — mirrors the backend's own keying.
+function titleHref(m: MediaCard): string {
+  if (m.kind === "anime" && m.anilist_id) return `/title/anime/${m.anilist_id}`;
+  if (m.kind === "movie" && m.tmdb_id) return `/title/movie/${m.tmdb_id}`;
+  if (m.kind === "show" && m.tmdb_id) return `/title/show/${m.tmdb_id}`;
   if (m.anilist_id) return `/title/anime/${m.anilist_id}`;
+  if (m.tmdb_id) return `/title/show/${m.tmdb_id}`;
   return "#";
 }
 
-export function Poster({ item }: { item: MediaSummary }) {
+export function Poster({ item }: { item: MediaCard }) {
   const year = item.year ? String(item.year).slice(0, 4) : null;
   return (
     <Link className="poster" to={titleHref(item)}>
@@ -51,7 +52,7 @@ export function Poster({ item }: { item: MediaSummary }) {
         ) : (
           <div className="ph">{item.title}</div>
         )}
-        {item.mediaType === "anime" && (
+        {item.kind === "anime" && (
           <span className="poster-badge badge badge-accent">Anime</span>
         )}
       </div>
@@ -63,21 +64,25 @@ export function Poster({ item }: { item: MediaSummary }) {
   );
 }
 
-export function PosterGrid({ items }: { items: MediaSummary[] }) {
+function keyOf(m: MediaCard, i: number): string {
+  return `${m.kind ?? ""}-${m.tmdb_id ?? m.anilist_id ?? i}`;
+}
+
+export function PosterGrid({ items }: { items: MediaCard[] }) {
   return (
     <div className="poster-grid">
       {items.map((m, i) => (
-        <Poster key={`${m.tmdb_id ?? m.anilist_id ?? i}`} item={m} />
+        <Poster key={keyOf(m, i)} item={m} />
       ))}
     </div>
   );
 }
 
-export function Rail({ items }: { items: MediaSummary[] }) {
+export function Rail({ items }: { items: MediaCard[] }) {
   return (
     <div className="rail">
       {items.map((m, i) => (
-        <Poster key={`${m.tmdb_id ?? m.anilist_id ?? i}`} item={m} />
+        <Poster key={keyOf(m, i)} item={m} />
       ))}
     </div>
   );

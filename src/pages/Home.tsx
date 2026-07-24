@@ -3,9 +3,9 @@ import { useAsync } from "../lib/useAsync";
 import { Spinner, ErrorBox, Rail } from "../components/ui";
 
 export default function Home() {
-  const trending = useAsync((s) => api.trending("", s), []);
-  const shows = useAsync((s) => api.trending("shows", s), []);
-  const movies = useAsync((s) => api.trending("movies", s), []);
+  const trending = useAsync((s) => api.trending("anime", s), []);
+  const shows = useAsync((s) => api.trending("show", s), []);
+  const movies = useAsync((s) => api.trending("movie", s), []);
 
   if (trending.loading && shows.loading && movies.loading) return <Spinner label="Lade …" />;
   if (trending.error && shows.error && movies.error) return <ErrorBox error={trending.error} />;
@@ -21,7 +21,7 @@ export default function Home() {
       {trending.data && trending.data.length > 0 && (
         <section className="section">
           <div className="section-head">
-            <h2>Angesagt</h2>
+            <h2>Angesagte Anime</h2>
           </div>
           <Rail items={trending.data} />
         </section>
