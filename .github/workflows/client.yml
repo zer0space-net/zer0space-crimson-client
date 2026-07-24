@@ -34,8 +34,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Init the crimson-sources submodule (anonymous)
-        run: git submodule update --init --recursive
+      - name: Init the crimson-sources submodule (anonymous, with retry)
+        run: |
+          for i in 1 2 3 4 5; do
+            git submodule update --init --recursive && exit 0
+            echo "submodule init failed (attempt $i) — retrying"; sleep $((i * 5))
+          done
+          exit 1
 
       - uses: actions/setup-node@v4
         with:
@@ -55,8 +60,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Init the crimson-sources submodule (anonymous)
-        run: git submodule update --init --recursive
+      - name: Init the crimson-sources submodule (anonymous, with retry)
+        run: |
+          for i in 1 2 3 4 5; do
+            git submodule update --init --recursive && exit 0
+            echo "submodule init failed (attempt $i) — retrying"; sleep $((i * 5))
+          done
+          exit 1
 
       # CR_PAT (classic PAT with write:packages), matching zer0space-dashboard —
       # GITHUB_TOKEN only writes to packages linked to this exact repo.
