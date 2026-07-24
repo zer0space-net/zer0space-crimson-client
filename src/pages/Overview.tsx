@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { api, type Kind } from "../lib/api";
 import { useAsync } from "../lib/useAsync";
 import { Spinner, ErrorBox } from "../components/ui";
+import FavoriteButton from "../components/FavoriteButton";
 
 // AniList descriptions arrive as HTML; the overview UI renders plain text, so
 // strip tags rather than dangerouslySetInnerHTML. Prefer the plain TMDB summary.
@@ -80,13 +81,20 @@ export default function Overview() {
 
           {synopsis && <p className="overview-synopsis">{synopsis}</p>}
 
-          {kind === "movie" && (
-            <div style={{ marginTop: 22 }}>
+          <div className="row gap-10" style={{ marginTop: 22, flexWrap: "wrap" }}>
+            {kind === "movie" && (
               <Link className="btn btn-primary" to={`/watch/movie/${data.tmdb_id}`}>
                 ▶ Abspielen
               </Link>
-            </div>
-          )}
+            )}
+            <FavoriteButton
+              kind={kind as Kind}
+              tmdbId={data.tmdb_id}
+              anilistId={data.anilist_id}
+              title={data.title}
+              poster={data.poster}
+            />
+          </div>
         </div>
       </div>
 

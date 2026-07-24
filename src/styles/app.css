@@ -75,6 +75,10 @@
 .poster-title { font-size: 0.9rem; font-weight: 560; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .poster-meta { font-size: 0.76rem; color: var(--text-faint); }
 
+/* Continue-watching resume progress along the bottom of the poster. */
+.resume-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(0,0,0,0.55); }
+.resume-bar span { display: block; height: 100%; background: var(--accent); }
+
 /* --- Overview page ------------------------------------------------------- */
 .overview-hero { display: grid; grid-template-columns: 220px 1fr; gap: 28px; margin-bottom: 34px; }
 .overview-poster { aspect-ratio: 2/3; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }

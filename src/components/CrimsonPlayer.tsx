@@ -4,8 +4,16 @@ import type { StreamLine } from "../lib/api";
 
 // Renders one resolved source. HLS via hls.js (native HLS on Safari), MP4 in a
 // plain <video>, and iframe sources in a sandboxed frame. Subtitle tracks are
-// attached when the source carries them.
-export default function CrimsonPlayer({ source }: { source: StreamLine }) {
+// attached when the source carries them. `onProgress` fires (throttled) with the
+// current position so the host can persist watch progress; iframe sources are
+// opaque, so they report nothing.
+export default function CrimsonPlayer({
+  source,
+  onProgress,
+}: {
+  source: StreamLine;
+  onProgress?: (position: number, duration: number) => void;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -37,6 +45,23 @@ export default function CrimsonPlayer({ source }: { source: StreamLine }) {
       video.load();
     };
   }, [source]);
+
+  // Throttled progress reporting (every ~15s of playback).
+  useEffect(() => {
+    if (source.streamType === "iframe" || !onProgress) return;
+    const video = videoRef.current;
+    if (!video) return;
+    let last = 0;
+    const onTime = () => {
+      const now = Date.now();
+      if (now - last < 15000) return;
+      if (!video.duration || Number.isNaN(video.duration)) return;
+      last = now;
+      onProgress(video.currentTime, video.duration);
+    };
+    video.addEventListener("timeupdate", onTime);
+    return () => video.removeEventListener("timeupdate", onTime);
+  }, [source, onProgress]);
 
   if (source.streamType === "iframe") {
     return (

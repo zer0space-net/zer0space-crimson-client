@@ -170,6 +170,24 @@ async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   return (await res.json()) as T;
 }
 
+async function send<T>(
+  method: "POST" | "DELETE",
+  path: string,
+  body?: unknown,
+  signal?: AbortSignal,
+): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: authHeaders(body ? { "Content-Type": "application/json", Accept: "application/json" } : { Accept: "application/json" }),
+    credentials: "include",
+    body: body ? JSON.stringify(body) : undefined,
+    signal,
+  });
+  if (res.status === 401) throw new ApiError(401, "unauthorised");
+  if (!res.ok) throw new ApiError(res.status, `${res.status} on ${path}`);
+  return (await res.json()) as T;
+}
+
 function tag(cards: MediaCard[] | undefined, kind: Kind): MediaCard[] {
   return (cards ?? []).map((c) => ({ ...c, kind: c.kind ?? kind }));
 }
@@ -240,4 +258,58 @@ export const api = {
   watchEpisode: (tmdbId: number, season: number, episode: number) =>
     `/watch/${tmdbId}/${season}/${episode}`,
   watchMovie: (tmdbId: number) => `/watch/movie/${tmdbId}`,
+
+  // --- Account (per-user, via the dashboard SSO broker) ----------------------
+
+  async favorites(signal?: AbortSignal): Promise<Favorite[]> {
+    const r = await getJson<{ favorites: Favorite[] }>("/account/favorites", signal);
+    return r.favorites ?? [];
+  },
+  addFavorite: (body: FavoriteIn) =>
+    send<{ success: boolean }>("POST", "/account/favorites", body),
+  removeFavorite(sel: { tmdb_id?: number; anilist_id?: number; media_type?: string }) {
+    const p = new URLSearchParams();
+    if (sel.tmdb_id != null) p.set("tmdb_id", String(sel.tmdb_id));
+    if (sel.anilist_id != null) p.set("anilist_id", String(sel.anilist_id));
+    if (sel.media_type) p.set("media_type", sel.media_type);
+    return send<{ success: boolean }>("DELETE", `/account/favorites?${p.toString()}`);
+  },
+  async continueWatching(signal?: AbortSignal): Promise<ProgressItem[]> {
+    const r = await getJson<{ items: ProgressItem[] }>("/account/continue-watching", signal);
+    return r.items ?? [];
+  },
+  saveProgress: (body: ProgressIn) =>
+    send<{ success: boolean }>("POST", "/account/progress", body),
 };
+
+// --- Account types (account_engine/routes.py) --------------------------------
+
+export interface FavoriteIn {
+  tmdb_id?: number | null;
+  anilist_id?: number | null;
+  season_number?: number | null;
+  media_type?: string | null;
+  title?: string | null;
+  poster?: string | null;
+}
+export interface Favorite extends FavoriteIn {
+  item_key: string;
+  list_name?: string;
+  added_at?: string;
+}
+export interface ProgressIn {
+  tmdb_id?: number | null;
+  anilist_id?: number | null;
+  season_number?: number | null;
+  episode_number?: number | null;
+  position_seconds?: number | null;
+  duration_seconds?: number | null;
+  status?: "in_progress" | "completed";
+  title?: string | null;
+  poster?: string | null;
+  media_type?: string | null;
+}
+export interface ProgressItem extends ProgressIn {
+  next_episode_exists?: boolean;
+  next_episode_air_date?: string | null;
+}

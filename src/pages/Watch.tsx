@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { api, type Kind, type StreamLine, type WatchLine } from "../lib/api";
+import { useAccount } from "../lib/useAccount";
 import CrimsonPlayer from "../components/CrimsonPlayer";
 
 // Consumes the progressive /watch NDJSON: each source is surfaced as a chip the
@@ -84,6 +85,28 @@ export default function Watch() {
     return () => ac.abort();
   }, [path]);
 
+  const accountAvailable = useAccount();
+  const saveProgress = useCallback(
+    (position: number, duration: number) => {
+      if (accountAvailable !== true) return;
+      const isMovie = kind === "movie";
+      api
+        .saveProgress({
+          tmdb_id: numId,
+          season_number: isMovie ? undefined : season,
+          episode_number: isMovie ? undefined : episode,
+          media_type: isMovie ? "movie" : undefined,
+          title: title || undefined,
+          position_seconds: position,
+          duration_seconds: duration,
+        })
+        .catch(() => {
+          /* best-effort */
+        });
+    },
+    [accountAvailable, kind, numId, season, episode, title],
+  );
+
   const current = sources[active];
   const backHref =
     kind === "movie" ? `/title/movie/${numId}` : `/title/${kind}/${numId}`;
@@ -107,7 +130,7 @@ export default function Watch() {
       </div>
 
       {current ? (
-        <CrimsonPlayer source={current} />
+        <CrimsonPlayer source={current} onProgress={saveProgress} />
       ) : (
         <div className="player-stage">
           <div className="player-empty">
