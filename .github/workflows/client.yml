@@ -28,19 +28,14 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      # persist-credentials:false so the zer0space-net token isn't left in git
-      # config — otherwise the submodule clone below sends it to crimsonhaven-to,
-      # which rejects it (cross-org) and fails even though the repo is public.
+      # CR_PAT (a personal token, valid for public repos in any org) clones the
+      # crimson-sources submodule. The default GITHUB_TOKEN is scoped to
+      # zer0space-net and is rejected by crimsonhaven-to; anonymous clones are
+      # rate-limited from Actions runners — both fail. See the build job note.
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
-      - name: Init the crimson-sources submodule (anonymous, with retry)
-        run: |
-          for i in 1 2 3 4 5; do
-            git submodule update --init --recursive && exit 0
-            echo "submodule init failed (attempt $i) — retrying"; sleep $((i * 5))
-          done
-          exit 1
+          submodules: recursive
+          token: ${{ secrets.CR_PAT }}
 
       - uses: actions/setup-node@v4
         with:
@@ -59,14 +54,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
-      - name: Init the crimson-sources submodule (anonymous, with retry)
-        run: |
-          for i in 1 2 3 4 5; do
-            git submodule update --init --recursive && exit 0
-            echo "submodule init failed (attempt $i) — retrying"; sleep $((i * 5))
-          done
-          exit 1
+          submodules: recursive
+          token: ${{ secrets.CR_PAT }}
 
       # CR_PAT (classic PAT with write:packages), matching zer0space-dashboard —
       # GITHUB_TOKEN only writes to packages linked to this exact repo.
