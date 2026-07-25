@@ -39,14 +39,14 @@ the gate; see the [backend repo](https://github.com/zer0space-net/zer0space-crim
 
 ```bash
 npm install
-git submodule update --init            # vendor/crimson-sources (engine)
 cp .env.example .env                    # point CRIMSON_API_ORIGIN at a backend
 npm run dev                             # http://localhost:5199/crimson/
 npm run build                           # tsc -b && vite build → dist/
 ```
 
 `vendor/crimson-sources` is Crimson Haven's engine, aliased so Vite transpiles its
-TypeScript inline (no separate build step), matching the upstream client's setup.
+TypeScript inline (no separate build step). It is vendored (committed here), not a
+submodule — see `vendor/crimson-sources/VENDORED.md` for why and how to update it.
 
 ## Layout
 
@@ -68,7 +68,7 @@ src/
   pages/                  Home, Catalogue, Search, Overview, Watch, NotFound
   styles/                 tokens.css (ported zer0space design system, crimson), app.css
 public/may/               May artwork (from zer0space-docs)
-vendor/crimson-sources/   Crimson Haven engine (git submodule)
+vendor/crimson-sources/   Crimson Haven engine (vendored — see VENDORED.md)
 ```
 
 ## Deploy

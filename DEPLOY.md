@@ -14,6 +14,15 @@ public: the only way in is being signed in to zer0space and visiting
  media: CDN ──▶ crimson-proxy ──▶ viewer   (never through the dashboard — Cloudflare ToS §2.8)
 ```
 
+## 0. The image builds itself — no secret needed
+
+GitHub Actions builds and pushes `ghcr.io/zer0space-net/zer0space-crimson-client`
+on every push to `main`, using the built-in `GITHUB_TOKEN` (the engine is
+vendored, not a cross-org submodule, so no PAT is required). After the first
+successful run, make the new package **pullable by the Swarm nodes** — either set
+the ghcr package to public, or have the nodes `docker login ghcr.io` (same as the
+dashboard image).
+
 ## 1. Create the shared overlay (once)
 
 All three stacks and the dashboard find each other on one external overlay:
