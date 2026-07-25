@@ -41,6 +41,7 @@ docker network create --driver overlay --attachable crimson_net
 | `TMDB_API_KEY` | TMDB key |
 | `PROXY_SECRET` | crimson-proxy shared secret |
 | `REQUIRE_LOGIN` | **`false`** — the zer0space gate is the auth |
+| `SIGNUP_INVITE_CODE` | e.g. `zer0space` — the SSO broker auto-registers accounts with this |
 | `PROXY_URLS` | crimson-proxy endpoints (optional) |
 
 It publishes `api` on `crimson_net` as **`zer0space-crimson-api`**.
@@ -57,17 +58,33 @@ redeploy it. (Kept out of the dashboard's committed compose on purpose, so a
 dashboard redeploy never fails on a `crimson_net` that doesn't exist yet — add
 these only once step 1 is done.)
 
+First create the SSO key secret on a manager (gives each zer0space user a real,
+synced Crimson account with no login screen):
+
+```bash
+openssl rand -hex 32 | docker secret create crimson_sso_secret -
+```
+
+Then add to the **dashboard** stack and redeploy:
+
 ```yaml
 services:
   dashboard:
     environment:
       # … existing env …
       - CRIMSON_CLIENT_URL=http://zer0space-crimson-client:80
-      - CRIMSON_API_URL=http://zer0space-crimson-api:8000   # backend's listen port
+      - CRIMSON_API_URL=http://zer0space-crimson-api:8000    # confirm backend port
+      - CRIMSON_SSO_INVITE_CODE=zer0space                    # = SIGNUP_INVITE_CODE
+    secrets:
+      - crimson_sso_secret
     networks:
       - dashboard_net
       - cloudflared_proxy
       - crimson_net            # add this
+
+secrets:
+  crimson_sso_secret:
+    external: true
 
 networks:
   # … existing …
@@ -76,7 +93,7 @@ networks:
 ```
 
 When both `CRIMSON_*` are set the dashboard logs
-`[crimson] gateway on /crimson (...)` at boot and mounts the gated routes;
+`[crimson] gateway on /crimson (... sso=on)` at boot and mounts the gated routes;
 unset, `/crimson` simply 404s and the dashboard is unchanged.
 
 > Confirm the backend's actual listen port and set `CRIMSON_API_URL` to match
