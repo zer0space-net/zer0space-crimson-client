@@ -99,21 +99,62 @@ unset, `/crimson` simply 404s and the dashboard is unchanged.
 > Confirm the backend's actual listen port and set `CRIMSON_API_URL` to match
 > (the Crimson backend serves uvicorn on its container port — commonly 8000).
 
-## 5. Verify
+## 5. Verify browsing
 
 1. Sign in to zer0space.
 2. Visit `https://zer0space.com/crimson` → the crimson SPA loads (May, crimson
    accent). Signed out, the same URL bounces to `/login`.
-3. A title's watch page should stream source tiles in as they resolve.
+3. Browse/search should fill (needs a valid **TMDB v4 Read Access Token** as the
+   backend's `TMDB_API_KEY` — the backend sends it as `Authorization: Bearer`, so
+   the *long* `eyJ…` token, not the short v3 key).
+4. A title's watch page should stream **source tiles** in as they resolve.
+
+## 6. Make it actually play — sources + the proxy
+
+Browsing works with just the base image, but two more pieces are needed before a
+gated source (VOE, ScreenScape, …) actually plays:
+
+### 6a. Backend source overlay (which sources exist)
+
+The public backend ships **no** third-party resolvers. Inject them from the
+private [`zer0space-crimson-secret-backend-sources`](https://github.com/zer0space-net/zer0space-crimson-secret-backend-sources):
+
+1. In `zer0space-crimson-backend` → Settings → Secrets → Actions, add
+   **`SOURCES_PAT`** (a classic PAT with `repo` read on the private sources repo).
+2. Actions → *Build crimson backend image* → **Run workflow** (a per-commit
+   cache-bust makes the overlay re-clone each build).
+3. Pull-and-redeploy the backend. `docker exec … ls resolvers/` should now show
+   `voe.py`, `screenscape.py`, … .
+
+### 6b. crimson-proxy (so gated sources deliver)
+
+Gated CDNs need `Referer`/`Origin` headers a browser can't set — the
+[`zer0space-crimson-proxy`](https://github.com/zer0space-net/zer0space-crimson-proxy)
+Cloudflare Worker injects them and relays segments. Deploy it (see that repo's
+README), then set on the backend stack — the **same secret** in both places:
+
+| Where | Variable | Value |
+|---|---|---|
+| proxy (wrangler secret) | `NITRO_PROXY_SECRET` | `openssl rand -hex 32` |
+| backend | `PROXY_SECRET` | *same value* |
+| backend | `CRIMSON_PROXY_BASE` | `https://zer0space-crimson-proxy.<you>.workers.dev` |
+
+Pull-and-redeploy the backend → its `/sign` grant stops 503-ing and E0 sources
+get proxy links → **playback works**.
 
 ## Notes
 
 - **Media stays off the tunnel.** Only JSON/NDJSON and the small static SPA pass
-  through the dashboard. Segment bytes go CDN → crimson-proxy → viewer, over
-  Tailscale, per Cloudflare ToS §2.8.
-- The client image is built by this repo's GitHub Actions to
-  `ghcr.io/zer0space-net/zer0space-crimson-client`. Needs the `CR_PAT` secret
-  (classic PAT, `write:packages`), same as zer0space-dashboard.
-- Per-user favourites/progress need the SSO bridge (the dashboard minting a
-  Crimson identity per zer0space user) — a later phase; browse/search/play work
-  without it.
+  through the dashboard. Segment bytes go CDN → **crimson-proxy** (Cloudflare
+  Worker) → viewer — never through the backend or the dashboard (Cloudflare ToS
+  §2.8).
+- The client + backend images build via the built-in `GITHUB_TOKEN` (fresh
+  packages that link to their repos) — no PAT needed for the image push. The
+  **backend overlay** does need `SOURCES_PAT` to read the private sources repo
+  (§6a).
+- Per-user favourites/progress use the SSO bridge (the dashboard mints a Crimson
+  identity per zer0space user, `CRIMSON_SSO_SECRET` + `CRIMSON_SSO_INVITE_CODE`);
+  browse/search/play work without it.
+- The engine (`crimson-sources`) is **vendored** into this repo, not a submodule,
+  so CI needs no cross-org token. Its org copy lives in
+  [`zer0space-crimson-sources`](https://github.com/zer0space-net/zer0space-crimson-sources).

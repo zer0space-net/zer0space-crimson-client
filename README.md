@@ -92,8 +92,10 @@ the zer0space→Crimson SSO bridge.
 
 ## Related in this org
 
-- [`zer0space-crimson-backend`](https://github.com/zer0space-net/zer0space-crimson-backend) — API, database, sync worker (deploy stack)
-- [`zer0space-crimson-sources`](https://github.com/zer0space-net/zer0space-crimson-sources) — the sources component
+- [`zer0space-crimson-backend`](https://github.com/zer0space-net/zer0space-crimson-backend) — API, database, sync worker + the backend source
+- [`zer0space-crimson-sources`](https://github.com/zer0space-net/zer0space-crimson-sources) — the client-side scrape/resolve engine
+- [`zer0space-crimson-proxy`](https://github.com/zer0space-net/zer0space-crimson-proxy) — signed HLS relay (Cloudflare Worker) that delivers gated streams
+- `zer0space-crimson-secret-backend-sources` — **private** server-side resolvers (overlay)
 
 ---
 
