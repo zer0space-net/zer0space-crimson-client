@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { useI18n, type Lang } from "../lib/i18n";
-import { ACCENTS, currentAccent, applyAccent } from "../lib/theme";
+import { ACCENTS, currentStored, setAccent } from "../lib/theme";
 import { getLangPref, setLangPref, LANG_PREFS } from "../lib/prefs";
 
 export default function Settings() {
   const { t, lang, setLang } = useI18n();
-  const [accent, setAccent] = useState(currentAccent);
+  const [stored, setStored] = useState(currentStored);
   const [langPref, setPref] = useState(getLangPref);
 
-  function pickAccent(color: string) {
-    setAccent(color);
-    applyAccent(color);
+  function pickAccent(value: string) {
+    setStored(value);
+    setAccent(value);
   }
   function pickPref(v: string) {
     setPref(v);
@@ -61,9 +61,9 @@ export default function Settings() {
                   type="button"
                   className="swatch"
                   title={a.label}
-                  aria-pressed={accent.toLowerCase() === a.color.toLowerCase()}
+                  aria-pressed={stored.toLowerCase() === a.stored.toLowerCase()}
                   style={{ background: a.color, color: a.color }}
-                  onClick={() => pickAccent(a.color)}
+                  onClick={() => pickAccent(a.stored)}
                 />
               ))}
             </div>

@@ -143,6 +143,42 @@
 .panel-head h2 { font-size: 1.05rem; }
 .panel-body { padding: 22px; }
 
+/* DE/EN pill toggle — used in the topbar and Settings. */
+.lang-toggle {
+  display: inline-flex; padding: 3px; gap: 3px; width: max-content;
+  border: 1px solid var(--border); border-radius: var(--radius-pill);
+  background: rgba(10, 6, 10, 0.5);
+}
+.lang-toggle button {
+  border: 0; background: transparent; color: var(--text-faint);
+  padding: 6px 15px; font: inherit; font-size: 0.74rem; font-weight: 700;
+  letter-spacing: 0.09em; border-radius: var(--radius-pill); cursor: pointer;
+  transition: color 0.16s var(--ease), background 0.16s var(--ease);
+}
+.lang-toggle button:hover { color: var(--text); }
+.lang-toggle button[aria-pressed="true"] {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, white 8%), var(--accent));
+  color: var(--accent-ink);
+  box-shadow: 0 4px 14px -6px var(--accent-glow);
+}
+
+/* Accent colour swatches. */
+.swatches { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.swatch {
+  width: 34px; height: 34px; border-radius: 50%; border: 0; padding: 0;
+  cursor: pointer; position: relative;
+  box-shadow: 0 0 0 1px var(--border-strong), 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+.swatch:hover { transform: scale(1.14); }
+.swatch[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px currentColor, 0 0 18px -2px currentColor;
+}
+.swatch[aria-pressed="true"]::after {
+  content: "✓"; position: absolute; inset: 0; display: grid; place-items: center;
+  color: #fff; font-size: 15px; font-weight: 700; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
 /* --- Footer -------------------------------------------------------------- */
 .site-foot { border-top: 1px solid var(--border); padding: 26px 0 40px; color: var(--text-faint); font-size: 0.82rem; }
 .site-foot a { color: var(--text-dim); }
