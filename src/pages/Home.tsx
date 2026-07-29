@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { api, type ProgressItem } from "../lib/api";
 import { useAsync } from "../lib/useAsync";
 import { useAccount } from "../lib/useAccount";
+import { useI18n } from "../lib/i18n";
 import { Spinner, ErrorBox, Rail } from "../components/ui";
 
 // A continue-watching card resumes at the saved episode; the watch route is
@@ -15,6 +16,7 @@ function resumeHref(it: ProgressItem): string | null {
 
 function ContinueWatching() {
   const available = useAccount();
+  const { t } = useI18n();
   const { data } = useAsync(
     (s) => (available === true ? api.continueWatching(s) : Promise.resolve([])),
     [available],
@@ -24,7 +26,7 @@ function ContinueWatching() {
   return (
     <section className="section">
       <div className="section-head">
-        <h2>Weiterschauen</h2>
+        <h2>{t("home.continue")}</h2>
       </div>
       <div className="rail">
         {data.map((it, i) => {
@@ -69,19 +71,21 @@ function ContinueWatching() {
 }
 
 export default function Home() {
+  const { t } = useI18n();
   const trending = useAsync((s) => api.trending("anime", s), []);
   const shows = useAsync((s) => api.trending("show", s), []);
   const movies = useAsync((s) => api.trending("movie", s), []);
 
-  if (trending.loading && shows.loading && movies.loading) return <Spinner label="Lade …" />;
+  if (trending.loading && shows.loading && movies.loading)
+    return <Spinner label={t("common.loading")} />;
   if (trending.error && shows.error && movies.error) return <ErrorBox error={trending.error} />;
 
   return (
     <>
       <div className="page-head">
-        <span className="eyebrow">zer0space ✕ Crimson</span>
-        <h1>Was läuft gerade</h1>
-        <p>Angetrieben vom Crimson-Haven-Backend, im zer0space-Universum.</p>
+        <span className="eyebrow">{t("home.eyebrow")}</span>
+        <h1>{t("home.title")}</h1>
+        <p>{t("home.sub")}</p>
       </div>
 
       <ContinueWatching />
@@ -89,7 +93,7 @@ export default function Home() {
       {trending.data && trending.data.length > 0 && (
         <section className="section">
           <div className="section-head">
-            <h2>Angesagte Anime</h2>
+            <h2>{t("home.trendingAnime")}</h2>
           </div>
           <Rail items={trending.data} />
         </section>
@@ -98,7 +102,7 @@ export default function Home() {
       {shows.data && shows.data.length > 0 && (
         <section className="section">
           <div className="section-head">
-            <h2>Serien</h2>
+            <h2>{t("home.shows")}</h2>
           </div>
           <Rail items={shows.data} />
         </section>
@@ -107,7 +111,7 @@ export default function Home() {
       {movies.data && movies.data.length > 0 && (
         <section className="section">
           <div className="section-head">
-            <h2>Filme</h2>
+            <h2>{t("home.movies")}</h2>
           </div>
           <Rail items={movies.data} />
         </section>

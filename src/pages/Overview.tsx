@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api, type Kind } from "../lib/api";
 import { useAsync } from "../lib/useAsync";
+import { useI18n } from "../lib/i18n";
 import { Spinner, ErrorBox } from "../components/ui";
 import FavoriteButton from "../components/FavoriteButton";
 
@@ -20,6 +21,7 @@ function plain(html: string | null | undefined): string {
 }
 
 export default function Overview() {
+  const { t } = useI18n();
   const { kind = "show", id = "0" } = useParams<{ kind: Kind; id: string }>();
   const numId = Number(id);
   const { data, loading, error } = useAsync(
@@ -43,7 +45,7 @@ export default function Overview() {
     [data?.tmdb_id, season, kind],
   );
 
-  if (loading) return <Spinner label="Lade Titel …" />;
+  if (loading) return <Spinner label={t("ov.loading")} />;
   if (error) return <ErrorBox error={error} />;
   if (!data) return null;
 
@@ -65,8 +67,8 @@ export default function Overview() {
           <div className="row gap-10 faint" style={{ fontSize: "0.86rem" }}>
             {year && <span>{year}</span>}
             {data.status && <span>· {data.status}</span>}
-            {kind === "anime" && <span className="badge badge-accent">Anime</span>}
-            {data.degraded && <span className="badge">eingeschränkte Daten</span>}
+            {kind === "anime" && <span className="badge badge-accent">{t("common.anime")}</span>}
+            {data.degraded && <span className="badge">{t("ov.degraded")}</span>}
           </div>
 
           {data.genres && data.genres.length > 0 && (
@@ -84,7 +86,7 @@ export default function Overview() {
           <div className="row gap-10" style={{ marginTop: 22, flexWrap: "wrap" }}>
             {kind === "movie" && (
               <Link className="btn btn-primary" to={`/watch/movie/${data.tmdb_id}`}>
-                ▶ Abspielen
+                {t("common.play")}
               </Link>
             )}
             <FavoriteButton
@@ -101,7 +103,7 @@ export default function Overview() {
       {kind !== "movie" && seasons.length > 0 && (
         <section className="section">
           <div className="section-head">
-            <h2>Episoden</h2>
+            <h2>{t("ov.episodes")}</h2>
           </div>
 
           {seasons.length > 1 && (
@@ -115,14 +117,14 @@ export default function Overview() {
                   }
                   onClick={() => setSeason(s.season_number)}
                 >
-                  {s.name || `Staffel ${s.season_number}`}
+                  {s.name || t("ov.season", { n: s.season_number })}
                 </button>
               ))}
             </div>
           )}
 
           {eps.loading ? (
-            <Spinner label="Lade Episoden …" />
+            <Spinner label={t("ov.epLoading")} />
           ) : eps.data && eps.data.episodes_list.length > 0 ? (
             <div className="episode-list">
               {eps.data.episodes_list.map((ep) => (
@@ -142,7 +144,7 @@ export default function Overview() {
               ))}
             </div>
           ) : (
-            <p className="faint">Keine Episoden gefunden.</p>
+            <p className="faint">{t("ov.noEpisodes")}</p>
           )}
         </section>
       )}

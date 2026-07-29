@@ -1,6 +1,7 @@
 import { useSearchParams } from "react-router-dom";
 import { api, type Kind, type MediaCard } from "../lib/api";
 import { useAsync } from "../lib/useAsync";
+import { useI18n } from "../lib/i18n";
 import { Spinner, ErrorBox, PosterGrid, Empty } from "../components/ui";
 
 // Searches all three backend indexes in parallel; api.search tags each result
@@ -14,6 +15,7 @@ async function searchAll(term: string, signal: AbortSignal): Promise<MediaCard[]
 }
 
 export default function Search() {
+  const { t } = useI18n();
   const [params] = useSearchParams();
   const q = params.get("q") ?? "";
   const { data, loading, error } = useAsync(
@@ -24,23 +26,25 @@ export default function Search() {
   return (
     <>
       <div className="page-head">
-        <h1>Suche</h1>
+        <h1>{t("search.title")}</h1>
         {q && (
           <p>
-            Ergebnisse für „<strong>{q}</strong>"
+            {t("search.resultsFor")} „<strong>{q}</strong>"
           </p>
         )}
       </div>
       {!q ? (
-        <Empty>Tippe oben einen Titel ein.</Empty>
+        <Empty>{t("search.prompt")}</Empty>
       ) : loading ? (
-        <Spinner label="Suche …" />
+        <Spinner label={t("search.searching")} />
       ) : error ? (
         <ErrorBox error={error} />
       ) : data && data.length ? (
         <PosterGrid items={data} />
       ) : (
-        <Empty>Nichts gefunden für „{q}".</Empty>
+        <Empty>
+          {t("search.nothing")} „{q}".
+        </Empty>
       )}
     </>
   );

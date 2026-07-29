@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { MediaCard } from "../lib/api";
+import { useI18n } from "../lib/i18n";
 
 export function Spinner({ label }: { label?: string }) {
   return (
@@ -11,15 +12,12 @@ export function Spinner({ label }: { label?: string }) {
 }
 
 export function ErrorBox({ error }: { error: Error }) {
+  const { t } = useI18n();
   const unauth = (error as { status?: number }).status === 401;
   return (
     <div className="center-box">
-      <div className="badge">{unauth ? "Zugang" : "Fehler"}</div>
-      <p className="dim">
-        {unauth
-          ? "Nicht angemeldet. Crimson ist nur über deine zer0space-Sitzung erreichbar."
-          : "Da ist etwas schiefgelaufen. Versuch es gleich noch einmal."}
-      </p>
+      <div className="badge">{unauth ? t("err.accessTag") : t("err.errorTag")}</div>
+      <p className="dim">{unauth ? t("err.unauth") : t("err.generic")}</p>
       <p className="faint mono" style={{ fontSize: "0.78rem" }}>
         {error.message}
       </p>
@@ -43,6 +41,7 @@ function titleHref(m: MediaCard): string {
 }
 
 export function Poster({ item }: { item: MediaCard }) {
+  const { t } = useI18n();
   const year = item.year ? String(item.year).slice(0, 4) : null;
   return (
     <Link className="poster" to={titleHref(item)}>
@@ -53,7 +52,7 @@ export function Poster({ item }: { item: MediaCard }) {
           <div className="ph">{item.title}</div>
         )}
         {item.kind === "anime" && (
-          <span className="poster-badge badge badge-accent">Anime</span>
+          <span className="poster-badge badge badge-accent">{t("common.anime")}</span>
         )}
       </div>
       <div className="poster-title" title={item.title}>

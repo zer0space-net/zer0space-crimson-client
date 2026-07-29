@@ -4,9 +4,11 @@ import Wordmark from "./Wordmark";
 import Starfield from "./Starfield";
 import Chibi from "./Chibi";
 import { BRAND } from "../lib/config";
+import { useI18n, type Lang } from "../lib/i18n";
 
 export default function Layout() {
   const navigate = useNavigate();
+  const { t, lang, setLang } = useI18n();
   const [q, setQ] = useState("");
 
   function onSearch(e: React.FormEvent) {
@@ -25,10 +27,13 @@ export default function Layout() {
             <Wordmark />
             <nav className="nav" aria-label="Hauptnavigation">
               <NavLink to="/" end>
-                <span>Start</span>
+                <span>{t("nav.home")}</span>
               </NavLink>
               <NavLink to="/catalogue">
-                <span>Katalog</span>
+                <span>{t("nav.catalogue")}</span>
+              </NavLink>
+              <NavLink to="/settings">
+                <span>{t("nav.settings")}</span>
               </NavLink>
             </nav>
             <div className="spacer" />
@@ -41,10 +46,17 @@ export default function Layout() {
                 type="search"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Suchen …"
-                aria-label="Titel suchen"
+                placeholder={t("search.placeholder")}
+                aria-label={t("search.placeholder")}
               />
             </form>
+            <div className="lang-toggle" role="group" aria-label={t("set.language")}>
+              {(["de", "en"] as Lang[]).map((l) => (
+                <button key={l} type="button" aria-pressed={lang === l} onClick={() => setLang(l)}>
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
           </div>
         </header>
 
@@ -57,17 +69,16 @@ export default function Layout() {
         <footer className="site-foot">
           <div className="shell stack gap-6">
             <div>
-              <strong>{BRAND.full}</strong> — läuft auf dem{" "}
-              <span className="credit">Crimson Haven</span> Backend.
+              <strong>{BRAND.full}</strong> — {t("foot.runsOn")}{" "}
+              <span className="credit">Crimson Haven</span>.
             </div>
             <div className="faint">
-              Streaming-Engine &amp; Backend:{" "}
+              {t("foot.engineBackend")}{" "}
               <a href={BRAND.upstreamUrl} target="_blank" rel="noopener noreferrer">
                 {BRAND.upstreamName} ↗
               </a>
               {" · "}
-              Oberfläche &amp; Betrieb: zer0space. Gehostet hinter{" "}
-              <Link to="/">zer0space</Link>.
+              {t("foot.uiBy")} <Link to="/">zer0space</Link>.
             </div>
           </div>
         </footer>

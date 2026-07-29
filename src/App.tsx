@@ -5,6 +5,7 @@ import Catalogue from "./pages/Catalogue";
 import Search from "./pages/Search";
 import Overview from "./pages/Overview";
 import Watch from "./pages/Watch";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="catalogue" element={<Catalogue />} />
         <Route path="search" element={<Search />} />
+        <Route path="settings" element={<Settings />} />
         {/* kind = show | movie | anime */}
         <Route path="title/:kind/:id" element={<Overview />} />
         <Route path="watch/:kind/:id" element={<Watch />} />

@@ -2,12 +2,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { api, type Kind, type StreamLine, type WatchLine } from "../lib/api";
 import { useAccount } from "../lib/useAccount";
+import { useI18n } from "../lib/i18n";
+import { preferredIndex } from "../lib/prefs";
 import CrimsonPlayer from "../components/CrimsonPlayer";
 
 // Consumes the progressive /watch NDJSON: each source is surfaced as a chip the
-// moment it resolves, and the first to arrive starts playing. The stream stays
-// open in the background so later (often higher-quality) sources keep filling in.
+// moment it resolves. The first to arrive starts playing, unless the viewer set a
+// preferred audio language — then a matching source is auto-selected when it lands
+// (until they pick one by hand). The stream stays open so later (often
+// higher-quality) sources keep filling in.
 export default function Watch() {
+  const { t } = useI18n();
   const { kind = "show", id = "0" } = useParams();
   const [params] = useSearchParams();
   const season = Number(params.get("s") ?? "1");
@@ -21,6 +26,7 @@ export default function Watch() {
   const [title, setTitle] = useState<string>("");
   const [airDate, setAirDate] = useState<string | null>(null);
   const seen = useRef(new Set<string>());
+  const userPicked = useRef(false);
 
   const numId = Number(id);
   const path =
@@ -29,6 +35,7 @@ export default function Watch() {
   useEffect(() => {
     const ac = new AbortController();
     seen.current = new Set();
+    userPicked.current = false;
     setSources([]);
     setActive(0);
     setStatus("loading");
@@ -52,25 +59,17 @@ export default function Watch() {
           }
         }
         setStatus((s) => (s === "error" ? s : "done"));
-      } catch (err) {
+      } catch {
         if (!ac.signal.aborted) setStatus("error");
       }
     })();
 
-    // In parallel, resolve sources client-side (E1–E3). These are merged into the
-    // same list and deduped against the backend's; if nothing runs client-side or
-    // it fails, the backend stream above stays the floor.
+    // In parallel, resolve sources client-side (E1–E3). Merged + deduped against
+    // the backend's; if nothing runs client-side, the backend stream is the floor.
     (async () => {
       try {
-        // Lazy-loaded so the heavy resolve engine only downloads on a watch page.
         const { clientStreams } = await import("../lib/clientSources");
-        for await (const line of clientStreams(
-          kind as Kind,
-          numId,
-          season,
-          episode,
-          ac.signal,
-        )) {
+        for await (const line of clientStreams(kind as Kind, numId, season, episode, ac.signal)) {
           const sl: StreamLine = { ...line, origin: "client" };
           const key = `${sl.source}|${sl.url}`;
           if (seen.current.has(key)) continue;
@@ -84,6 +83,14 @@ export default function Watch() {
 
     return () => ac.abort();
   }, [path]);
+
+  // Honour the preferred audio language: auto-select a matching source as tiles
+  // arrive, until the viewer overrides it by clicking one.
+  useEffect(() => {
+    if (userPicked.current || sources.length === 0) return;
+    const i = preferredIndex(sources);
+    if (i >= 0 && i !== active) setActive(i);
+  }, [sources, active]);
 
   const accountAvailable = useAccount();
   const saveProgress = useCallback(
@@ -108,18 +115,17 @@ export default function Watch() {
   );
 
   const current = sources[active];
-  const backHref =
-    kind === "movie" ? `/title/movie/${numId}` : `/title/${kind}/${numId}`;
+  const backHref = kind === "movie" ? `/title/movie/${numId}` : `/title/${kind}/${numId}`;
 
   return (
     <>
       <div className="page-head row gap-14" style={{ alignItems: "baseline" }}>
         <div>
           <Link to={backHref} className="faint" style={{ fontSize: "0.82rem" }}>
-            ← Zurück
+            ← {t("common.back")}
           </Link>
           <h1 style={{ fontSize: "1.4rem", marginTop: 4 }}>
-            {title || "Wiedergabe"}
+            {title || t("watch.title")}
             {kind !== "movie" && (
               <span className="faint" style={{ fontSize: "0.9rem", marginLeft: 10 }}>
                 S{season} · E{episode}
@@ -135,17 +141,18 @@ export default function Watch() {
         <div className="player-stage">
           <div className="player-empty">
             {status === "error" ? (
-              <span>Keine Quelle erreichbar.</span>
+              <span>{t("watch.noSourceReachable")}</span>
             ) : status === "unaired" ? (
               <span>
-                Noch nicht ausgestrahlt{airDate ? ` — geplant für ${airDate}` : ""}.
+                {t("watch.unaired")}
+                {airDate ? ` — ${t("watch.unairedFor")} ${airDate}` : ""}.
               </span>
             ) : status === "done" ? (
-              <span>Keine Quelle gefunden.</span>
+              <span>{t("watch.noSourceFound")}</span>
             ) : (
               <div className="row gap-10">
                 <div className="spinner spin" />
-                <span>Quellen werden aufgelöst …</span>
+                <span>{t("watch.resolving")}</span>
               </div>
             )}
           </div>
@@ -159,11 +166,16 @@ export default function Watch() {
               key={`${s.source}-${i}`}
               type="button"
               className={"source-chip" + (i === active ? " is-active" : "")}
-              onClick={() => setActive(i)}
+              onClick={() => {
+                userPicked.current = true;
+                setActive(i);
+              }}
             >
               <span>{s.source}</span>
               {s.language && <span className="lang">{s.language}</span>}
-              <span className="source-origin">{s.origin === "client" ? "lokal" : s.streamType}</span>
+              <span className="source-origin">
+                {s.origin === "client" ? t("watch.local") : s.streamType}
+              </span>
             </button>
           ))}
         </div>
@@ -171,7 +183,7 @@ export default function Watch() {
 
       {status === "streaming" && sources.length > 0 && (
         <p className="faint" style={{ marginTop: 12, fontSize: "0.82rem" }}>
-          Weitere Quellen werden noch gesucht …
+          {t("watch.moreSources")}
         </p>
       )}
     </>

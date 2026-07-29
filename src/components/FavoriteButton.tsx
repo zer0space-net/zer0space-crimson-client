@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, type Kind } from "../lib/api";
 import { useAccount } from "../lib/useAccount";
+import { useI18n } from "../lib/i18n";
 
 interface Props {
   kind: Kind;
@@ -23,6 +24,7 @@ function expectedKey(kind: Kind, tmdbId?: number | null, anilistId?: number | nu
 
 export default function FavoriteButton(props: Props) {
   const { kind, tmdbId, anilistId, title, poster, season } = props;
+  const { t } = useI18n();
   const available = useAccount();
   const [fav, setFav] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
@@ -86,7 +88,7 @@ export default function FavoriteButton(props: Props) {
       aria-pressed={fav ?? false}
       disabled={busy || fav === null}
     >
-      {fav ? "★ Gemerkt" : "☆ Merken"}
+      {fav ? t("fav.saved") : t("fav.save")}
     </button>
   );
 }
