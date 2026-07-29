@@ -29,9 +29,16 @@ const de: Dict = {
   "home.title": "Was läuft gerade",
   "home.sub": "Angetrieben vom Crimson-Haven-Backend, im zer0space-Universum.",
   "home.continue": "Weiterschauen",
+  "home.forYou": "Für dich",
   "home.trendingAnime": "Angesagte Anime",
   "home.shows": "Serien",
   "home.movies": "Filme",
+
+  "nav.library": "Merkliste",
+  "lib.title": "Meine Merkliste",
+  "lib.empty": "Noch nichts gemerkt.",
+  "lib.all": "Alle",
+  "ov.similar": "Ähnliche Titel",
 
   "cat.title": "Katalog",
   "cat.count": "{n} Titel im lokalen Index.",
@@ -101,9 +108,16 @@ const en: Dict = {
   "home.title": "What's on",
   "home.sub": "Powered by the Crimson Haven backend, in the zer0space universe.",
   "home.continue": "Continue watching",
+  "home.forYou": "For you",
   "home.trendingAnime": "Trending anime",
   "home.shows": "Shows",
   "home.movies": "Movies",
+
+  "nav.library": "Watchlist",
+  "lib.title": "My watchlist",
+  "lib.empty": "Nothing saved yet.",
+  "lib.all": "All",
+  "ov.similar": "Similar titles",
 
   "cat.title": "Catalogue",
   "cat.count": "{n} titles in the local index.",

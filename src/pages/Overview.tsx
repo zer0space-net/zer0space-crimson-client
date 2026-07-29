@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { api, type Kind } from "../lib/api";
 import { useAsync } from "../lib/useAsync";
 import { useI18n } from "../lib/i18n";
-import { Spinner, ErrorBox } from "../components/ui";
+import { Spinner, ErrorBox, Rail } from "../components/ui";
 import FavoriteButton from "../components/FavoriteButton";
 
 // AniList descriptions arrive as HTML; the overview UI renders plain text, so
@@ -43,6 +43,13 @@ export default function Overview() {
         ? api.seasonEpisodes(data.tmdb_id, season, s)
         : Promise.resolve(null),
     [data?.tmdb_id, season, kind],
+  );
+
+  // "Similar to" — AniList-keyed, so anime titles only.
+  const similar = useAsync(
+    (s) =>
+      data?.anilist_id ? api.similar(data.anilist_id, s) : Promise.resolve([]),
+    [data?.anilist_id],
   );
 
   if (loading) return <Spinner label={t("ov.loading")} />;
@@ -146,6 +153,15 @@ export default function Overview() {
           ) : (
             <p className="faint">{t("ov.noEpisodes")}</p>
           )}
+        </section>
+      )}
+
+      {similar.data && similar.data.length > 0 && (
+        <section className="section">
+          <div className="section-head">
+            <h2>{t("ov.similar")}</h2>
+          </div>
+          <Rail items={similar.data} />
         </section>
       )}
     </>

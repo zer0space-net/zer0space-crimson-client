@@ -32,6 +32,9 @@ export default function Layout() {
               <NavLink to="/catalogue">
                 <span>{t("nav.catalogue")}</span>
               </NavLink>
+              <NavLink to="/library">
+                <span>{t("nav.library")}</span>
+              </NavLink>
               <NavLink to="/settings">
                 <span>{t("nav.settings")}</span>
               </NavLink>

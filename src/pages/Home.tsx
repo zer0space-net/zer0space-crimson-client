@@ -70,6 +70,24 @@ function ContinueWatching() {
   );
 }
 
+function ForYou() {
+  const available = useAccount();
+  const { t } = useI18n();
+  const { data } = useAsync(
+    (s) => (available === true ? api.recommendations(s) : Promise.resolve([])),
+    [available],
+  );
+  if (available !== true || !data || data.length === 0) return null;
+  return (
+    <section className="section">
+      <div className="section-head">
+        <h2>{t("home.forYou")}</h2>
+      </div>
+      <Rail items={data} />
+    </section>
+  );
+}
+
 export default function Home() {
   const { t } = useI18n();
   const trending = useAsync((s) => api.trending("anime", s), []);
@@ -89,6 +107,7 @@ export default function Home() {
       </div>
 
       <ContinueWatching />
+      <ForYou />
 
       {trending.data && trending.data.length > 0 && (
         <section className="section">

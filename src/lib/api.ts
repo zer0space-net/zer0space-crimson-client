@@ -227,6 +227,20 @@ export const api = {
     return tag(r.suggestions, kind);
   },
 
+  // Personalised feed (needs an account); items already carry `kind`.
+  async recommendations(signal?: AbortSignal): Promise<MediaCard[]> {
+    const r = await getJson<{ recommendations: MediaCard[] }>("/recommendations?limit=24", signal);
+    return r.recommendations ?? [];
+  },
+  // "Similar to" for an anime title (AniList-keyed).
+  async similar(anilistId: number, signal?: AbortSignal): Promise<MediaCard[]> {
+    const r = await getJson<{ recommendations: MediaCard[] }>(
+      `/recommendations/similar/${anilistId}`,
+      signal,
+    );
+    return r.recommendations ?? [];
+  },
+
   overview(kind: Kind, id: number, signal?: AbortSignal): Promise<Overview> {
     if (kind === "movie") return getJson<Overview>(`/movie-overview/${id}`, signal);
     if (kind === "anime") return getJson<Overview>(`/overview/${id}`, signal);
