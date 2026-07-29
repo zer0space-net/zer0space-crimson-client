@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { api, type Kind, type StreamLine, type WatchLine } from "../lib/api";
 import { useAccount } from "../lib/useAccount";
+import { useAsync } from "../lib/useAsync";
 import { useI18n } from "../lib/i18n";
 import { preferredIndex } from "../lib/prefs";
 import CrimsonPlayer from "../components/CrimsonPlayer";
@@ -25,6 +26,7 @@ export default function Watch() {
   >("loading");
   const [title, setTitle] = useState<string>("");
   const [airDate, setAirDate] = useState<string | null>(null);
+  const [anilistId, setAnilistId] = useState<number | null>(null);
   const seen = useRef(new Set<string>());
   const userPicked = useRef(false);
 
@@ -38,6 +40,7 @@ export default function Watch() {
     userPicked.current = false;
     setSources([]);
     setActive(0);
+    setAnilistId(null);
     setStatus("loading");
 
     (async () => {
@@ -45,6 +48,7 @@ export default function Watch() {
         for await (const line of api.watch(path, ac.signal) as AsyncGenerator<WatchLine>) {
           if (line.type === "meta") {
             if (line.title) setTitle(line.title);
+            if (line.anilist_id) setAnilistId(line.anilist_id);
             setStatus("streaming");
           } else if (line.type === "unaired") {
             setAirDate(line.air_date);
@@ -114,6 +118,22 @@ export default function Watch() {
     [accountAvailable, kind, numId, season, episode, title],
   );
 
+  const isMovie = kind === "movie";
+  // Intro/outro skip intervals (anime only) and external subtitle tracks.
+  const skip = useAsync(
+    (s) => (anilistId && !isMovie ? api.skiptimes(anilistId, episode, 0, s) : Promise.resolve(null)),
+    [anilistId, episode, isMovie],
+  );
+  const subs = useAsync(
+    (s) =>
+      api.subtitles(
+        numId,
+        { season: isMovie ? undefined : season, episode: isMovie ? undefined : episode, isMovie },
+        s,
+      ),
+    [numId, season, episode, isMovie],
+  );
+
   const current = sources[active];
   const backHref = kind === "movie" ? `/title/movie/${numId}` : `/title/${kind}/${numId}`;
 
@@ -136,7 +156,12 @@ export default function Watch() {
       </div>
 
       {current ? (
-        <CrimsonPlayer source={current} onProgress={saveProgress} />
+        <CrimsonPlayer
+          source={current}
+          onProgress={saveProgress}
+          skip={skip.data}
+          extraSubtitles={subs.data ?? []}
+        />
       ) : (
         <div className="player-stage">
           <div className="player-empty">

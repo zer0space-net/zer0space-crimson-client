@@ -273,6 +273,45 @@ export const api = {
     `/watch/${tmdbId}/${season}/${episode}`,
   watchMovie: (tmdbId: number) => `/watch/movie/${tmdbId}`,
 
+  // Intro/outro skip intervals (AniSkip via the backend). Anime-only — needs the
+  // AniList id. Best-effort: any failure yields "not found" so playback is never
+  // blocked by it.
+  async skiptimes(
+    anilistId: number,
+    episode: number,
+    episodeLength = 0,
+    signal?: AbortSignal,
+  ): Promise<SkipTimes> {
+    try {
+      return await getJson<SkipTimes>(
+        `/skiptimes?anilist_id=${anilistId}&episode=${episode}&episode_length=${Math.round(episodeLength)}`,
+        signal,
+      );
+    } catch {
+      return { success: false, found: false, op: null, ed: null };
+    }
+  },
+
+  // External subtitle tracks from OpenSubtitles (503 if the backend has no
+  // OPENSUBTITLES_API_KEY → treated as "none"). urls are signed same-origin.
+  async subtitles(
+    tmdbId: number,
+    opts: { season?: number; episode?: number; isMovie?: boolean; languages?: string } = {},
+    signal?: AbortSignal,
+  ): Promise<SubtitleTrack[]> {
+    const p = new URLSearchParams({ tmdb_id: String(tmdbId) });
+    p.set("languages", opts.languages || "de,en");
+    if (opts.isMovie) p.set("is_movie", "true");
+    if (opts.season != null) p.set("season", String(opts.season));
+    if (opts.episode != null) p.set("episode", String(opts.episode));
+    try {
+      const r = await getJson<{ subtitles: SubtitleTrack[] }>(`/subtitles?${p}`, signal);
+      return r.subtitles ?? [];
+    } catch {
+      return [];
+    }
+  },
+
   // --- Account (per-user, via the dashboard SSO broker) ----------------------
 
   async favorites(signal?: AbortSignal): Promise<Favorite[]> {
@@ -326,4 +365,16 @@ export interface ProgressIn {
 export interface ProgressItem extends ProgressIn {
   next_episode_exists?: boolean;
   next_episode_air_date?: string | null;
+}
+
+export interface SkipInterval {
+  start: number;
+  end: number;
+}
+export interface SkipTimes {
+  success: boolean;
+  found: boolean;
+  op: SkipInterval | null; // opening / intro
+  ed: SkipInterval | null; // ending / outro
+  episode_length?: number;
 }

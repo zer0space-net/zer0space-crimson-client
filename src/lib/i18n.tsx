@@ -67,6 +67,8 @@ const de: Dict = {
   "watch.unairedFor": "geplant für",
   "watch.moreSources": "Weitere Quellen werden noch gesucht …",
   "watch.local": "lokal",
+  "watch.skipIntro": "Intro überspringen",
+  "watch.skipOutro": "Outro überspringen",
 
   "fav.saved": "★ Gemerkt",
   "fav.save": "☆ Merken",
@@ -146,6 +148,8 @@ const en: Dict = {
   "watch.unairedFor": "scheduled for",
   "watch.moreSources": "Still searching for more sources …",
   "watch.local": "local",
+  "watch.skipIntro": "Skip intro",
+  "watch.skipOutro": "Skip outro",
 
   "fav.saved": "★ Saved",
   "fav.save": "☆ Save",
