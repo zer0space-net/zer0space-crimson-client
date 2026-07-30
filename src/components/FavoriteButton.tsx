@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api, type Kind } from "../lib/api";
 import { useAccount } from "../lib/useAccount";
 import { useI18n } from "../lib/i18n";
+import { getLocalLists, addLocalList } from "../lib/lists";
 
 interface Props {
   kind: Kind;
@@ -53,6 +54,8 @@ export default function FavoriteButton(props: Props) {
           if (!names.includes(n)) names.push(n);
         }
         if (!names.includes(DEFAULT_LIST)) names.unshift(DEFAULT_LIST);
+        // Include empty lists the user created in the Library page.
+        for (const n of getLocalLists()) if (!names.includes(n)) names.push(n);
         setAllLists(names);
       })
       .catch(() => {
@@ -118,6 +121,7 @@ export default function FavoriteButton(props: Props) {
     const name = newName.trim().slice(0, 100);
     if (!name) return;
     setNewName("");
+    addLocalList(name); // remember it so it shows in the Library too
     await setInList(name, true);
   }
 
