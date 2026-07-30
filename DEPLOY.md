@@ -142,6 +142,34 @@ README), then set on the backend stack — the **same secret** in both places:
 Pull-and-redeploy the backend → its `/sign` grant stops 503-ing and E0 sources
 get proxy links → **playback works**.
 
+### 6c. German dubs for live-action series/movies (FlareSolverr)
+
+Anime German works out of the box (aniworld.to has no captcha). But
+**serienstream.to / s.to** (the German source for live-action shows + movies) now
+gate every hoster link behind a **Cloudflare Turnstile**, which plain-HTTP
+scraping can't pass — so those titles resolve English-only without this.
+
+The fix needs **no browser extension**: a headless real Chromium
+(**FlareSolverr**) resolves the gate server-side. On the homelab's *residential*
+IP the "managed" Turnstile auto-passes with no interaction, mints the German
+VOE/Vidmoly redirect, and the normal resolver + crimson-proxy play it.
+
+It ships in the backend stack (`docker-compose.yml` → the `flaresolverr` service)
+and is **on by default**: `FLARESOLVERR_URL` defaults to `http://flaresolverr:8191`
+(the internal service). So just **pull-and-redeploy the backend stack** — the new
+`flaresolverr` container comes up and the patched `sto` scraper routes gated links
+to it. To disable, set `FLARESOLVERR_URL=` (empty) → those hosters are dropped,
+exactly as before.
+
+Notes:
+- Chromium is memory-hungry — the service reserves up to **1 GiB**; it's pinned to
+  `CRIMSON_NODE` alongside the api (no overlay hop) and is **internal-only** (never
+  a public hostname).
+- First solve after a cold start is slow (Chromium warms up); later ones are fast.
+- If a title still shows no German, the Turnstile occasionally escalates to an
+  interactive challenge FlareSolverr can't clear — retry, or it's genuinely
+  unavailable in German.
+
 ## Notes
 
 - **Media stays off the tunnel.** Only JSON/NDJSON and the small static SPA pass
