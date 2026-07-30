@@ -320,11 +320,18 @@ export const api = {
   },
   addFavorite: (body: FavoriteIn) =>
     send<{ success: boolean }>("POST", "/account/favorites", body),
-  removeFavorite(sel: { tmdb_id?: number; anilist_id?: number; media_type?: string }) {
+  removeFavorite(sel: {
+    tmdb_id?: number;
+    anilist_id?: number;
+    media_type?: string;
+    list_name?: string;
+  }) {
     const p = new URLSearchParams();
     if (sel.tmdb_id != null) p.set("tmdb_id", String(sel.tmdb_id));
     if (sel.anilist_id != null) p.set("anilist_id", String(sel.anilist_id));
     if (sel.media_type) p.set("media_type", sel.media_type);
+    // With list_name the item leaves that one list; without it, all lists.
+    if (sel.list_name) p.set("list_name", sel.list_name);
     return send<{ success: boolean }>("DELETE", `/account/favorites?${p.toString()}`);
   },
   async continueWatching(signal?: AbortSignal): Promise<ProgressItem[]> {
@@ -333,6 +340,32 @@ export const api = {
   },
   saveProgress: (body: ProgressIn) =>
     send<{ success: boolean }>("POST", "/account/progress", body),
+
+  // --- Watchlists ------------------------------------------------------------
+  async watchlists(signal?: AbortSignal): Promise<Watchlist[]> {
+    const r = await getJson<{ watchlists: Watchlist[] }>("/account/watchlists", signal);
+    return r.watchlists ?? [];
+  },
+  // Same-origin authenticated download link — used as an <a href download>.
+  exportHref: (format: "csv" | "json") =>
+    `${API_BASE}/account/favorites/export?format=${format}`,
+  // Restore a CSV/JSON export: the file's raw text is the request body (the
+  // backend sniffs the format). mode=merge adds to existing lists; replace wipes
+  // them first. Returns the backend's {imported, skipped} summary.
+  async importFavorites(
+    text: string,
+    mode: "merge" | "replace" = "merge",
+  ): Promise<{ imported?: number; skipped?: number }> {
+    const res = await fetch(`${API_BASE}/account/favorites/import?mode=${mode}`, {
+      method: "POST",
+      headers: authHeaders({ "Content-Type": "text/plain", Accept: "application/json" }),
+      credentials: "include",
+      body: text,
+    });
+    if (res.status === 401) throw new ApiError(401, "unauthorised");
+    if (!res.ok) throw new ApiError(res.status, `${res.status} on import`);
+    return (await res.json()) as { imported?: number; skipped?: number };
+  },
 };
 
 // --- Account types (account_engine/routes.py) --------------------------------
@@ -344,6 +377,11 @@ export interface FavoriteIn {
   media_type?: string | null;
   title?: string | null;
   poster?: string | null;
+  list_name?: string;
+}
+export interface Watchlist {
+  list_name: string;
+  count: number;
 }
 export interface Favorite extends FavoriteIn {
   item_key: string;

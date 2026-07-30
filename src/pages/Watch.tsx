@@ -4,8 +4,17 @@ import { api, type Kind, type StreamLine, type WatchLine } from "../lib/api";
 import { useAccount } from "../lib/useAccount";
 import { useAsync } from "../lib/useAsync";
 import { useI18n } from "../lib/i18n";
-import { preferredIndex } from "../lib/prefs";
+import { preferredIndex, getSubLangs } from "../lib/prefs";
 import CrimsonPlayer from "../components/CrimsonPlayer";
+
+// Colour-code a source's language label so German (the most-requested dub) pops
+// at a glance, English reads as the neutral default, everything else is muted.
+function langClass(language: string): string {
+  const l = language.toLowerCase();
+  if (l.includes("german") || l.includes("deutsch") || l.includes("ger")) return " is-de";
+  if (l.includes("english") || l.includes("eng")) return " is-en";
+  return "";
+}
 
 // Consumes the progressive /watch NDJSON: each source is surfaced as a chip the
 // moment it resolves. The first to arrive starts playing, unless the viewer set a
@@ -124,14 +133,24 @@ export default function Watch() {
     (s) => (anilistId && !isMovie ? api.skiptimes(anilistId, episode, 0, s) : Promise.resolve(null)),
     [anilistId, episode, isMovie],
   );
+  // Only pull external subtitles for the languages the viewer opted into
+  // (Settings → Subtitle Languages). Empty selection = skip the fetch entirely.
+  const subLangsKey = getSubLangs().join(",");
   const subs = useAsync(
     (s) =>
-      api.subtitles(
-        numId,
-        { season: isMovie ? undefined : season, episode: isMovie ? undefined : episode, isMovie },
-        s,
-      ),
-    [numId, season, episode, isMovie],
+      subLangsKey
+        ? api.subtitles(
+            numId,
+            {
+              season: isMovie ? undefined : season,
+              episode: isMovie ? undefined : episode,
+              isMovie,
+              languages: subLangsKey,
+            },
+            s,
+          )
+        : Promise.resolve([]),
+    [numId, season, episode, isMovie, subLangsKey],
   );
 
   const current = sources[active];
@@ -197,7 +216,9 @@ export default function Watch() {
               }}
             >
               <span>{s.source}</span>
-              {s.language && <span className="lang">{s.language}</span>}
+              {s.language && (
+                <span className={"lang-badge" + langClass(s.language)}>{s.language}</span>
+              )}
               <span className="source-origin">
                 {s.origin === "client" ? t("watch.local") : s.streamType}
               </span>
