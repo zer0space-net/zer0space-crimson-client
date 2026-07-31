@@ -64,7 +64,11 @@ export function Poster({ item }: { item: MediaCard }) {
 }
 
 function keyOf(m: MediaCard, i: number): string {
-  return `${m.kind ?? ""}-${m.tmdb_id ?? m.anilist_id ?? i}`;
+  // Always append the index so keys are unique even when the same title appears
+  // more than once in a grid (e.g. a watchlist title that lives in two lists, or
+  // the same show surfacing in two rails). Duplicate keys break React's
+  // reconciliation — the grid renders a stale set and stops updating on filter.
+  return `${m.kind ?? ""}-${m.tmdb_id ?? m.anilist_id ?? "x"}-${i}`;
 }
 
 export function PosterGrid({ items }: { items: MediaCard[] }) {

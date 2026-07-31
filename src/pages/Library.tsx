@@ -65,10 +65,20 @@ export default function Library() {
 
   const items = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return (data ?? [])
-      .filter((f) => !list || (f.list_name || DEFAULT_LIST) === list)
-      .filter((f) => !q || (f.title || "").toLowerCase().includes(q))
-      .map(toCard);
+    const seen = new Set<string>();
+    const out: MediaCard[] = [];
+    for (const f of data ?? []) {
+      if (list && (f.list_name || DEFAULT_LIST) !== list) continue;
+      if (q && !(f.title || "").toLowerCase().includes(q)) continue;
+      const card = toCard(f);
+      // Dedupe: the same title can live in several lists, so the "all" view would
+      // otherwise show it once per list.
+      const id = `${card.kind}:${card.tmdb_id ?? card.anilist_id ?? card.title}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      out.push(card);
+    }
+    return out;
   }, [data, list, query]);
 
   async function onImportFile(e: React.ChangeEvent<HTMLInputElement>) {
