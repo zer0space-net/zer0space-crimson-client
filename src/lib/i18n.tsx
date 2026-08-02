@@ -35,6 +35,7 @@ const de: Dict = {
   "home.movies": "Filme",
 
   "nav.library": "Merkliste",
+  "nav.search": "Suche",
   "lib.title": "Meine Merkliste",
   "lib.empty": "Noch nichts gemerkt.",
   "lib.all": "Alle",
@@ -49,6 +50,7 @@ const de: Dict = {
   "search.title": "Suche",
   "search.resultsFor": "Ergebnisse für",
   "search.prompt": "Tippe oben einen Titel ein.",
+  "search.submit": "Suchen",
   "search.searching": "Suche …",
   "search.nothing": "Nichts gefunden für",
 
@@ -145,6 +147,7 @@ const en: Dict = {
   "home.movies": "Movies",
 
   "nav.library": "Watchlist",
+  "nav.search": "Search",
   "lib.title": "My watchlist",
   "lib.empty": "Nothing saved yet.",
   "lib.all": "All",
@@ -159,6 +162,7 @@ const en: Dict = {
   "search.title": "Search",
   "search.resultsFor": "Results for",
   "search.prompt": "Type a title above.",
+  "search.submit": "Search",
   "search.searching": "Searching …",
   "search.nothing": "Nothing found for",
 

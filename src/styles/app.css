@@ -48,6 +48,9 @@
 /* --- Content ------------------------------------------------------------- */
 .content { flex: 1; padding: 30px 0 90px; animation: rise 0.35s var(--ease); }
 .page-head { margin-bottom: 22px; }
+/* The way back out of the player. A class rather than an inline font-size so the
+   touch breakpoint can give it a real hit area. */
+.back-link { display: inline-flex; align-items: center; font-size: 0.82rem; }
 .page-head h1 { font-size: 1.9rem; }
 .page-head p { color: var(--text-faint); margin-top: 5px; }
 
@@ -267,16 +270,164 @@
 }
 .pop-row:hover { background: rgba(255, 255, 255, 0.05); }
 
+/* --- Search page --------------------------------------------------------- */
+/* The search field, on the page rather than in the bar. It is the only way to
+   search on a phone (where the topbar box is hidden) and a convenience on a
+   wide screen, so it is not width-conditional. */
+.search-page { display: flex; gap: 10px; margin-bottom: 22px; max-width: 520px; }
+.search-page .input { flex: 1; min-width: 0; }
+.search-page .btn { flex: none; }
+
 /* --- Footer -------------------------------------------------------------- */
 .site-foot { border-top: 1px solid var(--border); padding: 26px 0 40px; color: var(--text-faint); font-size: 0.82rem; }
 .site-foot a { color: var(--text-dim); }
 .site-foot .credit { color: var(--accent); }
 
-@media (max-width: 760px) {
-  .overview-hero { grid-template-columns: 1fr; }
-  .overview-poster { max-width: 200px; }
-  .search-inline input { width: 150px; }
-  .search-inline input:focus { width: 180px; }
-  .nav a span { display: none; }
+/* --- Touch tab bar ------------------------------------------------------- */
+/* Hidden above the tablet breakpoint; the topbar carries the same destinations
+   there. Fixed to the bottom, over the content, with the home-indicator inset
+   folded into its padding so the labels are never under the gesture bar. */
+.tabbar { display: none; }
+
+/* ==========================================================================
+   Responsive
+
+     max-width: 1024px  tablet — bottom tab bar, touch-sized controls
+     max-width: 768px   phone  — one column, and search moves to its own page
+
+   Above 1024px nothing changes.
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .shell { width: min(100% - 32px, var(--shell)); }
+
+  /* The links leave the bar for the tab bar at the tablet breakpoint, not the
+     phone one: four links at touch size, next to the wordmark, a 230 px search
+     box and a language switch, are ~40 px wider than a 1024 px iPad. Something
+     had to go, and navigation is the thing with a better home. */
+  .topbar .nav { display: none; }
+  .topbar-inner { height: 64px; }
+
+  .tabbar {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    -webkit-backdrop-filter: saturate(1.3) blur(18px);
+    backdrop-filter: saturate(1.3) blur(18px);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 56px;
+    padding: 8px 4px;
+    color: var(--text-faint);
+    font-size: 0.66rem;
+    font-weight: 560;
+    letter-spacing: 0.01em;
+    text-align: center;
+    transition: color 0.16s var(--ease);
+  }
+  .tab:hover { text-decoration: none; color: var(--text-dim); }
+  .tab svg { width: 22px; height: 22px; }
+  .tab.is-active { color: var(--accent); }
+  .tab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+
+  /* Room for the bar, so the last row of posters and the footer credit are not
+     permanently underneath it. */
+  .site-foot { padding-bottom: calc(40px + 56px + env(safe-area-inset-bottom)); }
+
+  /* May would sit exactly on top of the tab bar. She keeps the wide layout. */
+  .chibi { display: none; }
+
+  /* 44 x 44 px is the Apple HIG minimum. A tablet is a finger, not a mouse, so
+     the sizing starts here rather than at the phone breakpoint. */
+  .btn { min-height: 44px; padding: 11px 18px; }
+  .btn-sm { min-height: 44px; padding: 10px 15px; font-size: 0.84rem; }
+  .btn-icon { width: 44px; height: 44px; }
+  .lang-toggle button, .seg button { min-height: 44px; min-width: 44px; }
+  .chip-check { min-height: 44px; }
+  .swatch { width: 44px; height: 44px; }
+  .brand { min-height: 44px; }
+  .source-chip { min-height: 44px; }
+  .episode-row { min-height: 52px; }
+  .fav-menu-row, .pop-row { min-height: 44px; display: flex; align-items: center; }
+  .back-link { min-height: 44px; padding-right: 8px; }
+
+  /* iOS Safari zooms the viewport when a focused field's text is under 16 px
+     and never zooms back out. Every input the user can tap has to clear it. */
+  .input, select.input, .search-inline input { font-size: 16px; }
+  .input-sm { padding: 9px 12px; font-size: 16px; }
+
+  .poster-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 18px 14px; }
+}
+
+@media (max-width: 768px) {
+  .shell { width: calc(100% - 28px); }
+  .topbar-inner { height: 60px; gap: 12px; }
+
+  /* The search box goes too, leaving the wordmark and the language switch. It
+     does not fit on a 375 px row and it has a better home: the Search page,
+     which carries the same field at every width. */
+  .topbar .search-inline { display: none; }
+  .brand-mark { width: 30px; height: 30px; }
+  .wordmark { font-size: 0.88rem; letter-spacing: 0.08em; gap: 0.3em; }
+  .wordmark-sub { display: none; }
+
+  .content { padding: 22px 0 24px; }
   .page-head h1 { font-size: 1.5rem; }
+  .section { margin-bottom: 32px; }
+
+  /* Two posters a row: at 375 px that is a ~158 px card, which is still a
+     legible 2:3 thumbnail with a two-line title under it. */
+  .poster-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; }
+  .rail { grid-auto-columns: minmax(138px, 46vw); gap: 12px; }
+
+  .overview-hero { grid-template-columns: 1fr; gap: 18px; }
+  .overview-poster { max-width: 180px; }
+  .overview-title { font-size: 1.5rem; }
+  .overview-synopsis { max-width: none; }
+  .settings-grid { grid-template-columns: 1fr; }
+  .panel-head { padding: 16px 18px; }
+  .panel-body { padding: 18px; }
+  .set-hint { max-width: none; }
+
+  /* The skip button clears the native video controls, which are taller on a
+     phone than the 64 px the desktop layout allows for. */
+  .skip-btn { right: 12px; bottom: 78px; padding: 12px 16px; }
+
+  /* Toolbar and watchlist popovers become a sheet above the tab bar rather than
+     a box hanging off their button. Two things go wrong otherwise on a 375 px
+     screen: a 230 px menu opened from a button near the right edge runs off
+     the side, and anchoring it to the button's own position puts it on top of
+     the button that opened it. */
+  .pop, .fav-menu {
+    position: fixed;
+    left: 14px;
+    right: 14px;
+    top: auto;
+    bottom: calc(56px + 14px + env(safe-area-inset-bottom));
+    min-width: 0;
+    width: auto;
+    max-height: 60dvh;
+    overflow-y: auto;
+    box-shadow: 0 -10px 40px -12px rgba(0, 0, 0, 0.8);
+  }
+  .search-page { max-width: none; }
+}
+
+@media (max-width: 400px) {
+  .search-page { flex-direction: column; }
+  .search-page .btn { width: 100%; }
+  .tab { font-size: 0.62rem; }
 }

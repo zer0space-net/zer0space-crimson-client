@@ -160,7 +160,7 @@ export default function Watch() {
     <>
       <div className="page-head row gap-14" style={{ alignItems: "baseline" }}>
         <div>
-          <Link to={backHref} className="faint" style={{ fontSize: "0.82rem" }}>
+          <Link to={backHref} className="faint back-link">
             ← {t("common.back")}
           </Link>
           <h1 style={{ fontSize: "1.4rem", marginTop: 4 }}>
