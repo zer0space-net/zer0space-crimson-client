@@ -68,13 +68,21 @@ function Browse({
             {t("browse.popular")}
           </button>
         </div>
-        <div className="browse-cats" role="group" aria-label={t("browse.filter")}>
-          {cats.map((c) => (
-            <button key={c} type="button" aria-pressed={cat === c} onClick={() => setCat(c)}>
-              {t(catKey[c])}
-            </button>
-          ))}
-        </div>
+        <label className="browse-drop">
+          <span className="browse-drop-label">{t("browse.filter")}</span>
+          <select
+            className="input browse-select"
+            value={cat}
+            onChange={(e) => setCat(e.target.value as BrowseCat)}
+            aria-label={t("browse.filter")}
+          >
+            {cats.map((c) => (
+              <option key={c} value={c}>
+                {t(catKey[c])}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
       <PosterGrid items={items} />
     </section>
@@ -183,14 +191,15 @@ export default function Home() {
       </div>
 
       <NewsTicker />
-      <ContinueWatching />
-      <ForYou />
 
       <Browse
         anime={trending.data ?? []}
         shows={shows.data ?? []}
         movies={movies.data ?? []}
       />
+
+      <ContinueWatching />
+      <ForYou />
     </>
   );
 }

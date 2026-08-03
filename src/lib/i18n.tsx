@@ -83,6 +83,8 @@ const de: Dict = {
   "watch.local": "lokal",
   "watch.skipIntro": "Intro überspringen",
   "watch.skipOutro": "Outro überspringen",
+  "watch.nextEp": "Nächste Folge",
+  "watch.prevEp": "Vorherige",
 
   "fav.saved": "★ Gemerkt",
   "fav.save": "☆ Merken",
@@ -207,6 +209,8 @@ const en: Dict = {
   "watch.local": "local",
   "watch.skipIntro": "Skip intro",
   "watch.skipOutro": "Skip outro",
+  "watch.nextEp": "Next episode",
+  "watch.prevEp": "Previous",
 
   "fav.saved": "★ Saved",
   "fav.save": "☆ Save",

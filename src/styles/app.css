@@ -314,15 +314,16 @@
   .news-viewport { overflow-x: auto; }
 }
 
-.news-head h2 { font-size: 1.3rem; }
+.news-head h2 { font-size: 1.5rem; }
 .news-card {
-  flex: 0 0 auto; width: 360px; height: 202px; position: relative;
+  flex: 0 0 auto; width: 440px; height: 248px; position: relative;
   border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border);
   text-decoration: none; color: var(--text);
   transition: transform 0.2s var(--ease), border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
 }
-.news-card:hover { box-shadow: 0 20px 44px -20px var(--accent-glow); }
-.news-card-title { font-size: 1.02rem; }
+.news-card:hover { box-shadow: 0 22px 50px -20px var(--accent-glow); }
+.news-card-title { font-size: 1.14rem; }
+.news-card-body { padding: 15px 18px; }
 .news-card:hover { transform: translateY(-3px); border-color: var(--accent); }
 .news-card-img, .news-card-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .news-card-ph { position: absolute; inset: 0; background: var(--glass-2); }
@@ -373,20 +374,42 @@
   content: ""; position: absolute; left: 0; right: 0; bottom: -7px; height: 3px;
   border-radius: 3px; background: var(--accent); box-shadow: 0 3px 12px -2px var(--accent-glow);
 }
-.browse-cats {
-  display: inline-flex; padding: 3px; gap: 3px; width: max-content;
-  border: 1px solid var(--border); border-radius: var(--radius-pill); background: rgba(10, 6, 10, 0.5);
+.browse-drop { display: inline-flex; align-items: center; gap: 10px; }
+.browse-drop-label {
+  color: var(--text-faint); font-size: 0.82rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
 }
-.browse-cats button {
-  border: 0; background: transparent; color: var(--text-faint); padding: 7px 15px;
-  font: inherit; font-size: 0.8rem; font-weight: 600; border-radius: var(--radius-pill);
-  cursor: pointer; transition: color 0.16s var(--ease), background 0.16s var(--ease);
+.browse-select {
+  width: auto; min-width: 160px; padding: 10px 16px; font-weight: 700; cursor: pointer;
 }
-.browse-cats button:hover { color: var(--text); }
-.browse-cats button[aria-pressed="true"] {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, white 8%), var(--accent));
-  color: var(--accent-ink); box-shadow: 0 4px 14px -6px var(--accent-glow);
+
+/* --- Poster hover peek (Netflix-style) ------------------------------------- */
+.poster-hover {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  justify-content: space-between; padding: 12px; opacity: 0;
+  background: linear-gradient(180deg, rgba(8, 4, 8, 0.1) 0%, rgba(8, 4, 8, 0.35) 45%, rgba(8, 4, 8, 0.92) 100%);
+  transition: opacity 0.18s var(--ease); pointer-events: none;
 }
+.poster:hover .poster-hover { opacity: 1; }
+.poster-hover-play {
+  align-self: center; margin-top: auto; margin-bottom: auto;
+  width: 46px; height: 46px; display: grid; place-items: center;
+  border-radius: 50%; background: color-mix(in srgb, var(--accent) 90%, transparent);
+  color: var(--accent-ink); font-size: 1rem; padding-left: 3px;
+  box-shadow: 0 8px 22px -6px var(--accent-glow); transform: scale(0.8);
+  transition: transform 0.18s var(--ease);
+}
+.poster:hover .poster-hover-play { transform: scale(1); }
+.poster-hover-info { display: flex; flex-direction: column; gap: 4px; }
+.poster-hover-title {
+  font-size: 0.86rem; font-weight: 700; line-height: 1.2; color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.poster-hover-meta { display: flex; gap: 10px; font-size: 0.72rem; color: rgba(255, 255, 255, 0.82); }
+.poster-hover-rate { color: #ffd27a; }
+/* Let the poster lift a touch more on hover for the streaming-shelf feel. */
+.poster:hover .poster-img { transform: translateY(-4px) scale(1.03); }
 
 /* --- Overview: episode availability (audio/subs, DE/EN, Dub/Sub) ------------ */
 .avail-row {

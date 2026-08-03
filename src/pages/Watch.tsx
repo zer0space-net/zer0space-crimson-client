@@ -172,6 +172,25 @@ export default function Watch() {
             )}
           </h1>
         </div>
+
+        {kind !== "movie" && (
+          <div className="ep-nav" style={{ marginLeft: "auto" }}>
+            {episode > 1 && (
+              <Link
+                className="btn btn-sm btn-ghost"
+                to={`/watch/${kind}/${numId}?s=${season}&e=${episode - 1}`}
+              >
+                ← {t("watch.prevEp")}
+              </Link>
+            )}
+            <Link
+              className="btn btn-sm btn-primary"
+              to={`/watch/${kind}/${numId}?s=${season}&e=${episode + 1}`}
+            >
+              {t("watch.nextEp")} →
+            </Link>
+          </div>
+        )}
       </div>
 
       {current ? (

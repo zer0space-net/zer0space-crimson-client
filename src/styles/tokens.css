@@ -52,7 +52,7 @@
   --font: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Consolas, monospace;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --shell: 1320px;
+  --shell: 1560px;
 }
 
 *, *::before, *::after { box-sizing: border-box; }

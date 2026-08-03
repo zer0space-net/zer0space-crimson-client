@@ -43,6 +43,8 @@ function titleHref(m: MediaCard): string {
 export function Poster({ item }: { item: MediaCard }) {
   const { t } = useI18n();
   const year = item.year ? String(item.year).slice(0, 4) : null;
+  const rating =
+    item.vote_average && item.vote_average > 0 ? item.vote_average.toFixed(1) : null;
   return (
     <Link className="poster" to={titleHref(item)}>
       <div className="poster-img">
@@ -54,6 +56,17 @@ export function Poster({ item }: { item: MediaCard }) {
         {item.kind === "anime" && (
           <span className="poster-badge badge badge-accent">{t("common.anime")}</span>
         )}
+        {/* Netflix-style hover peek: reveals a play affordance + quick facts. */}
+        <div className="poster-hover" aria-hidden="true">
+          <span className="poster-hover-play">▶</span>
+          <div className="poster-hover-info">
+            <span className="poster-hover-title">{item.title}</span>
+            <span className="poster-hover-meta">
+              {year && <span>{year}</span>}
+              {rating && <span className="poster-hover-rate">★ {rating}</span>}
+            </span>
+          </div>
+        </div>
       </div>
       <div className="poster-title" title={item.title}>
         {item.title}
