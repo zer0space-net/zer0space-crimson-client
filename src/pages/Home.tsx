@@ -4,6 +4,7 @@ import { useAsync } from "../lib/useAsync";
 import { useAccount } from "../lib/useAccount";
 import { useI18n } from "../lib/i18n";
 import { Spinner, ErrorBox, Rail } from "../components/ui";
+import NewsTicker from "../components/NewsTicker";
 
 // A continue-watching card resumes at the saved episode; the watch route is
 // TMDB-keyed, so an item without a tmdb id falls back to nothing (skipped).
@@ -106,6 +107,7 @@ export default function Home() {
         <p>{t("home.sub")}</p>
       </div>
 
+      <NewsTicker />
       <ContinueWatching />
       <ForYou />
 
