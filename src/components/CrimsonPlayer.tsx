@@ -33,14 +33,17 @@ export default function CrimsonPlayer({
 
     let hls: Hls | null = null;
     if (source.streamType === "hls") {
-      if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        video.src = source.url;
-      } else if (Hls.isSupported()) {
+      // Prefer hls.js wherever it's supported (Chrome/Firefox/Edge). Trusting
+      // canPlayType('application/vnd.apple.mpegurl') first was the bug: some Chrome
+      // builds answer "maybe", so the m3u8 was handed to the native element, which
+      // can't actually play HLS → MEDIA_ELEMENT_ERROR "Format error" (grey player).
+      // Native HLS is only the right path on Safari, where hls.js isn't supported.
+      if (Hls.isSupported()) {
         hls = new Hls({ enableWorker: true, lowLatencyMode: false });
         hls.loadSource(source.url);
         hls.attachMedia(video);
       } else {
-        video.src = source.url; // last resort
+        video.src = source.url; // Safari (native HLS) / last resort
       }
     } else {
       video.src = source.url;
