@@ -1,10 +1,85 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, type ProgressItem } from "../lib/api";
+import { api, type MediaCard, type ProgressItem } from "../lib/api";
 import { useAsync } from "../lib/useAsync";
 import { useAccount } from "../lib/useAccount";
 import { useI18n } from "../lib/i18n";
-import { Spinner, ErrorBox, Rail } from "../components/ui";
+import { Spinner, ErrorBox, Rail, PosterGrid } from "../components/ui";
 import NewsTicker from "../components/NewsTicker";
+
+type BrowseCat = "all" | "anime" | "series" | "movie";
+
+function yearOf(m: MediaCard): number {
+  const y = typeof m.year === "string" ? parseInt(m.year, 10) : m.year;
+  return typeof y === "number" && !Number.isNaN(y) ? y : 0;
+}
+
+// Round-robin merge so the "all" view mixes types instead of listing every anime
+// first.
+function interleave(...lists: MediaCard[][]): MediaCard[] {
+  const out: MediaCard[] = [];
+  const max = Math.max(0, ...lists.map((l) => l.length));
+  for (let i = 0; i < max; i++) for (const l of lists) if (l[i]) out.push(l[i]);
+  return out;
+}
+
+// The Netflix/Crunchyroll-style browse strip: New / Popular tabs + category chips
+// over a responsive poster grid. Popular keeps the trending order; New sorts by
+// year (freshest first).
+function Browse({
+  anime,
+  shows,
+  movies,
+}: {
+  anime: MediaCard[];
+  shows: MediaCard[];
+  movies: MediaCard[];
+}) {
+  const { t } = useI18n();
+  const [tab, setTab] = useState<"popular" | "new">("popular");
+  const [cat, setCat] = useState<BrowseCat>("all");
+
+  const items = useMemo(() => {
+    let pool =
+      cat === "anime" ? anime : cat === "series" ? shows : cat === "movie" ? movies
+      : interleave(anime, shows, movies);
+    if (tab === "new") pool = [...pool].sort((a, b) => yearOf(b) - yearOf(a));
+    return pool;
+  }, [anime, shows, movies, tab, cat]);
+
+  const cats: BrowseCat[] = ["all", "anime", "series", "movie"];
+  const catKey: Record<BrowseCat, string> = {
+    all: "news.all",
+    anime: "news.anime",
+    series: "news.series",
+    movie: "news.movies",
+  };
+
+  if (!items.length) return null;
+
+  return (
+    <section className="section browse">
+      <div className="browse-bar">
+        <div className="browse-tabs">
+          <button type="button" aria-pressed={tab === "new"} onClick={() => setTab("new")}>
+            {t("browse.new")}
+          </button>
+          <button type="button" aria-pressed={tab === "popular"} onClick={() => setTab("popular")}>
+            {t("browse.popular")}
+          </button>
+        </div>
+        <div className="browse-cats" role="group" aria-label={t("browse.filter")}>
+          {cats.map((c) => (
+            <button key={c} type="button" aria-pressed={cat === c} onClick={() => setCat(c)}>
+              {t(catKey[c])}
+            </button>
+          ))}
+        </div>
+      </div>
+      <PosterGrid items={items} />
+    </section>
+  );
+}
 
 // A continue-watching card resumes at the saved episode; the watch route is
 // TMDB-keyed, so an item without a tmdb id falls back to nothing (skipped).
@@ -111,32 +186,11 @@ export default function Home() {
       <ContinueWatching />
       <ForYou />
 
-      {trending.data && trending.data.length > 0 && (
-        <section className="section">
-          <div className="section-head">
-            <h2>{t("home.trendingAnime")}</h2>
-          </div>
-          <Rail items={trending.data} />
-        </section>
-      )}
-
-      {shows.data && shows.data.length > 0 && (
-        <section className="section">
-          <div className="section-head">
-            <h2>{t("home.shows")}</h2>
-          </div>
-          <Rail items={shows.data} />
-        </section>
-      )}
-
-      {movies.data && movies.data.length > 0 && (
-        <section className="section">
-          <div className="section-head">
-            <h2>{t("home.movies")}</h2>
-          </div>
-          <Rail items={movies.data} />
-        </section>
-      )}
+      <Browse
+        anime={trending.data ?? []}
+        shows={shows.data ?? []}
+        movies={movies.data ?? []}
+      />
     </>
   );
 }

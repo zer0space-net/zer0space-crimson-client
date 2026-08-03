@@ -6,6 +6,81 @@ import { useI18n } from "../lib/i18n";
 import { Spinner, ErrorBox, Rail } from "../components/ui";
 import FavoriteButton from "../components/FavoriteButton";
 
+type Avail = { loading: boolean; audio: string[]; sub: string[] };
+
+const LANG_ORDER = ["de", "en", "ja"];
+function classifyLang(label: string): string | null {
+  const l = label.toLowerCase();
+  if (/german|deutsch|ger/.test(l)) return "de";
+  if (/english|eng/.test(l)) return "en";
+  if (/japan|jpn|ja\b/.test(l)) return "ja";
+  return null;
+}
+const LANG_LABEL: Record<string, string> = { de: "DE", en: "EN", ja: "JA" };
+const sortLangs = (s: Set<string>) =>
+  [...s].sort((a, b) => LANG_ORDER.indexOf(a) - LANG_ORDER.indexOf(b));
+
+// Resolving a season's E1 is a full /watch (all scrapers), so remember the result
+// per (tmdb, season) for the session — re-opening a series doesn't hit it again.
+const availCache = new Map<string, Avail>();
+
+// Which audio (dub) + subtitle (sub) languages a series offers, discovered by
+// resolving the season's first episode in the background (capped, best-effort — the
+// player is the source of truth, this is just an at-a-glance hint on the overview).
+function useAvailability(
+  kind: Kind,
+  tmdbId: number | null | undefined,
+  season: number | null,
+  firstEp: number | undefined,
+): Avail {
+  const [state, setState] = useState<Avail>({ loading: false, audio: [], sub: [] });
+  useEffect(() => {
+    if (kind === "movie" || !tmdbId || season == null || !firstEp) {
+      setState({ loading: false, audio: [], sub: [] });
+      return;
+    }
+    const cacheKey = `${tmdbId}:${season}`;
+    const cached = availCache.get(cacheKey);
+    if (cached) {
+      setState(cached);
+      return;
+    }
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 14000); // don't hang the badges forever
+    const audio = new Set<string>();
+    const sub = new Set<string>();
+    setState({ loading: true, audio: [], sub: [] });
+    (async () => {
+      try {
+        for await (const line of api.watch(api.watchEpisode(tmdbId, season, firstEp), ac.signal)) {
+          if (line.type === "stream" && line.language) {
+            const lang = classifyLang(line.language);
+            if (!lang) continue;
+            const low = line.language.toLowerCase();
+            if (low.includes("dub")) audio.add(lang);
+            if (low.includes("sub")) sub.add(lang);
+            setState({ loading: true, audio: sortLangs(audio), sub: sortLangs(sub) });
+          }
+        }
+      } catch {
+        /* aborted / network — keep whatever we collected */
+      } finally {
+        const final = { loading: false, audio: sortLangs(audio), sub: sortLangs(sub) };
+        // Only cache a completed, non-aborted resolve that actually found something.
+        if (!ac.signal.aborted && (final.audio.length || final.sub.length)) {
+          availCache.set(cacheKey, final);
+        }
+        setState(final);
+      }
+    })();
+    return () => {
+      clearTimeout(timer);
+      ac.abort();
+    };
+  }, [kind, tmdbId, season, firstEp]);
+  return state;
+}
+
 // AniList descriptions arrive as HTML; the overview UI renders plain text, so
 // strip tags rather than dangerouslySetInnerHTML. Prefer the plain TMDB summary.
 function plain(html: string | null | undefined): string {
@@ -51,6 +126,10 @@ export default function Overview() {
       data?.anilist_id ? api.similar(data.anilist_id, s) : Promise.resolve([]),
     [data?.anilist_id],
   );
+
+  // Language/version availability for the chosen season (resolves E1 in the bg).
+  const firstEp = eps.data?.episodes_list?.[0]?.episode_number;
+  const avail = useAvailability(kind as Kind, data?.tmdb_id ?? null, season, firstEp);
 
   if (loading) return <Spinner label={t("ov.loading")} />;
   if (error) return <ErrorBox error={error} />;
@@ -130,6 +209,41 @@ export default function Overview() {
             </div>
           )}
 
+          {(avail.audio.length > 0 || avail.sub.length > 0 || avail.loading) && (
+            <div className="avail-row">
+              {avail.audio.length > 0 && (
+                <span className="row gap-8" style={{ alignItems: "center" }}>
+                  <span className="avail-label">{t("ov.audio")}:</span>
+                  <span className="avail-badges">
+                    {avail.audio.map((l) => (
+                      <span key={l} className={`avail-badge is-${l}`}>
+                        {LANG_LABEL[l]}
+                      </span>
+                    ))}
+                  </span>
+                </span>
+              )}
+              {avail.sub.length > 0 && (
+                <span className="row gap-8" style={{ alignItems: "center" }}>
+                  <span className="avail-label">{t("ov.subs")}:</span>
+                  <span className="avail-badges">
+                    {avail.sub.map((l) => (
+                      <span key={l} className={`avail-badge is-${l}`}>
+                        {LANG_LABEL[l]}
+                      </span>
+                    ))}
+                  </span>
+                </span>
+              )}
+              {avail.loading && avail.audio.length === 0 && avail.sub.length === 0 && (
+                <span className="avail-spin">
+                  <span className="spinner spin" />
+                  {t("watch.resolving")}
+                </span>
+              )}
+            </div>
+          )}
+
           {eps.loading ? (
             <Spinner label={t("ov.epLoading")} />
           ) : eps.data && eps.data.episodes_list.length > 0 ? (
@@ -146,6 +260,15 @@ export default function Overview() {
                   <span className="episode-title">
                     {ep.title || `Episode ${ep.episode_number}`}
                   </span>
+                  {avail.audio.length > 0 && (
+                    <span className="episode-avail" aria-hidden="true">
+                      {avail.audio.map((l) => (
+                        <span key={l} className={`ea is-${l}`}>
+                          {LANG_LABEL[l]}
+                        </span>
+                      ))}
+                    </span>
+                  )}
                   <span className="faint">▶</span>
                 </Link>
               ))}

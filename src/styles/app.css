@@ -60,7 +60,7 @@
 .section-head a { font-size: 0.82rem; color: var(--text-faint); margin-left: auto; }
 
 /* --- Poster grid / rails ------------------------------------------------- */
-.poster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px 18px; }
+.poster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(182px, 1fr)); gap: 24px 20px; }
 .rail { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(160px, 172px); gap: 16px; overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x proximity; }
 .rail > * { scroll-snap-align: start; }
 
@@ -314,12 +314,15 @@
   .news-viewport { overflow-x: auto; }
 }
 
+.news-head h2 { font-size: 1.3rem; }
 .news-card {
-  flex: 0 0 auto; width: 300px; height: 168px; position: relative;
+  flex: 0 0 auto; width: 360px; height: 202px; position: relative;
   border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border);
   text-decoration: none; color: var(--text);
-  transition: transform 0.2s var(--ease), border-color 0.2s var(--ease);
+  transition: transform 0.2s var(--ease), border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
 }
+.news-card:hover { box-shadow: 0 20px 44px -20px var(--accent-glow); }
+.news-card-title { font-size: 1.02rem; }
 .news-card:hover { transform: translateY(-3px); border-color: var(--accent); }
 .news-card-img, .news-card-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .news-card-ph { position: absolute; inset: 0; background: var(--glass-2); }
@@ -352,6 +355,62 @@
 }
 .news-card-meta { display: flex; gap: 10px; font-size: 0.72rem; color: rgba(255, 255, 255, 0.78); }
 .news-rate { color: #ffd27a; }
+
+/* --- Home browse strip: New / Popular tabs + category chips ----------------- */
+.browse-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.browse-tabs { display: inline-flex; gap: 18px; }
+.browse-tabs button {
+  border: 0; background: transparent; color: var(--text-faint); font: inherit;
+  font-size: 1.28rem; font-weight: 800; padding: 4px 0; cursor: pointer;
+  position: relative; transition: color 0.16s var(--ease);
+}
+.browse-tabs button:hover { color: var(--text); }
+.browse-tabs button[aria-pressed="true"] { color: var(--text); }
+.browse-tabs button[aria-pressed="true"]::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -7px; height: 3px;
+  border-radius: 3px; background: var(--accent); box-shadow: 0 3px 12px -2px var(--accent-glow);
+}
+.browse-cats {
+  display: inline-flex; padding: 3px; gap: 3px; width: max-content;
+  border: 1px solid var(--border); border-radius: var(--radius-pill); background: rgba(10, 6, 10, 0.5);
+}
+.browse-cats button {
+  border: 0; background: transparent; color: var(--text-faint); padding: 7px 15px;
+  font: inherit; font-size: 0.8rem; font-weight: 600; border-radius: var(--radius-pill);
+  cursor: pointer; transition: color 0.16s var(--ease), background 0.16s var(--ease);
+}
+.browse-cats button:hover { color: var(--text); }
+.browse-cats button[aria-pressed="true"] {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, white 8%), var(--accent));
+  color: var(--accent-ink); box-shadow: 0 4px 14px -6px var(--accent-glow);
+}
+
+/* --- Overview: episode availability (audio/subs, DE/EN, Dub/Sub) ------------ */
+.avail-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin: 2px 0 16px; font-size: 0.82rem;
+}
+.avail-label { color: var(--text-faint); font-size: 0.76rem; }
+.avail-badges { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.avail-badge {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px;
+  border-radius: var(--radius-pill); font-size: 0.72rem; font-weight: 700;
+  border: 1px solid var(--border-strong); background: rgba(255, 255, 255, 0.03); color: var(--text-dim);
+}
+.avail-badge.is-de { color: #34d399; border-color: color-mix(in srgb, #34d399 50%, transparent); background: color-mix(in srgb, #34d399 12%, transparent); }
+.avail-badge.is-en { color: #60a5fa; border-color: color-mix(in srgb, #60a5fa 42%, transparent); background: color-mix(in srgb, #60a5fa 10%, transparent); }
+.avail-spin { display: inline-flex; align-items: center; gap: 8px; color: var(--text-faint); font-size: 0.78rem; }
+/* Per-episode availability chips on the right of a row. */
+.episode-avail { margin-left: auto; display: inline-flex; gap: 5px; }
+.episode-avail .ea {
+  font-size: 0.6rem; font-weight: 800; letter-spacing: 0.04em; padding: 2px 7px;
+  border-radius: 999px; border: 1px solid var(--border-strong); color: var(--text-dim);
+}
+.episode-avail .ea.is-de { color: #34d399; border-color: color-mix(in srgb, #34d399 45%, transparent); }
+.episode-avail .ea.is-en { color: #60a5fa; border-color: color-mix(in srgb, #60a5fa 40%, transparent); }
 
 /* --- Search page --------------------------------------------------------- */
 /* The search field, on the page rather than in the bar. It is the only way to
