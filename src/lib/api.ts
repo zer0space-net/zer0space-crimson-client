@@ -201,13 +201,15 @@ export const api = {
     getJson<{ id: string; is_admin?: boolean }>("/account/me", signal),
 
   // Trending: anime at /trending (key "animes"), plus /trending/shows|movies.
+  // 50 is the ceiling the endpoints allow; the home grid is the only caller and it
+  // shows all of them, so ask for the full set rather than a token 24.
   async trending(kind: Kind, signal?: AbortSignal): Promise<MediaCard[]> {
     if (kind === "anime") {
-      const r = await getJson<{ animes: MediaCard[] }>("/trending?limit=24", signal);
+      const r = await getJson<{ animes: MediaCard[] }>("/trending?limit=50", signal);
       return tag(r.animes, "anime");
     }
     const key = kind === "show" ? "shows" : "movies";
-    const r = await getJson<Record<string, MediaCard[]>>(`/trending/${key}?limit=24`, signal);
+    const r = await getJson<Record<string, MediaCard[]>>(`/trending/${key}?limit=50`, signal);
     return tag(r[key], kind);
   },
 

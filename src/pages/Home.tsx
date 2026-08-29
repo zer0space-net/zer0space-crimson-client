@@ -154,6 +154,22 @@ function ContinueWatching() {
   );
 }
 
+// One rail per category, the shape the home page had before the browse grid
+// replaced it. The grid is still the place to filter and dig; these give the
+// page something to show at a glance instead of opening on two account rails.
+function CategoryRail({ titleKey, items }: { titleKey: string; items: MediaCard[] }) {
+  const { t } = useI18n();
+  if (!items.length) return null;
+  return (
+    <section className="section">
+      <div className="section-head">
+        <h2>{t(titleKey)}</h2>
+      </div>
+      <Rail items={items.slice(0, 20)} />
+    </section>
+  );
+}
+
 function ForYou() {
   const available = useAccount();
   const { t } = useI18n();
@@ -178,6 +194,25 @@ export default function Home() {
   const shows = useAsync((s) => api.trending("show", s), []);
   const movies = useAsync((s) => api.trending("movie", s), []);
 
+  // Every trending surface is TMDB-backed, so one TMDB fault empties all three at
+  // once and the browse grid hides itself — which collapses the whole page to the
+  // two account-backed rails. The catalogue is a different table and usually still
+  // has titles, so fall back to it. Only in that case: it is a much larger payload
+  // and must not sit in the normal load path.
+  const settled = !trending.loading && !shows.loading && !movies.loading;
+  const trendingEmpty =
+    settled &&
+    !(trending.data?.length || shows.data?.length || movies.data?.length);
+  const fallback = useAsync(
+    (s) => (trendingEmpty ? api.catalogue(s) : Promise.resolve<MediaCard[]>([])),
+    [trendingEmpty],
+  );
+
+  const anime = trending.data?.length ? trending.data : (fallback.data ?? []);
+  const showList = shows.data ?? [];
+  const movieList = movies.data ?? [];
+  const nothingAtAll = trendingEmpty && !fallback.loading && !(fallback.data?.length);
+
   if (trending.loading && shows.loading && movies.loading)
     return <Spinner label={t("common.loading")} />;
   if (trending.error && shows.error && movies.error) return <ErrorBox error={trending.error} />;
@@ -192,14 +227,20 @@ export default function Home() {
 
       <NewsTicker />
 
-      <Browse
-        anime={trending.data ?? []}
-        shows={shows.data ?? []}
-        movies={movies.data ?? []}
-      />
+      {nothingAtAll && (
+        <section className="section">
+          <p className="faint">{t("home.catalogueDown")}</p>
+        </section>
+      )}
 
       <ContinueWatching />
       <ForYou />
+
+      <CategoryRail titleKey="home.trendingAnime" items={anime} />
+      <CategoryRail titleKey="home.shows" items={showList} />
+      <CategoryRail titleKey="home.movies" items={movieList} />
+
+      <Browse anime={anime} shows={showList} movies={movieList} />
     </>
   );
 }

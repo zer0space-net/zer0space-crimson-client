@@ -8,6 +8,17 @@ import { fileURLToPath } from "node:url";
 export default defineConfig({
   base: "/crimson/",
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        // Keep the framework in its own chunk: it changes far less often than app
+        // code, so a redeploy no longer invalidates it in everyone's cache.
+        manualChunks: {
+          react: ["react", "react-dom", "react-router-dom"],
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       // The Crimson Haven scrape/resolve engine, vendored as a git submodule and
