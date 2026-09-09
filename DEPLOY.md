@@ -170,6 +170,42 @@ Notes:
   interactive challenge FlareSolverr can't clear — retry, or it's genuinely
   unavailable in German.
 
+### 6d. AirPlay to a TV (iPhone / iPad)
+
+Casting a series to the TV used to be **screen mirroring only** — a letterboxed
+copy of the phone's screen, with the wrong aspect ratio, that goes away the moment
+you leave the app. Two things caused that, and both are fixed in the code (no
+config, nothing to set):
+
+1. **The video came out of a MediaSource.** `hls.js` runs on
+   `ManagedMediaSource` on iOS 17.1+, and Safari cannot AirPlay MSE playback as
+   *video* — only mirror it. The player now hands the m3u8 to Safari's own HLS
+   stack (`video.src`) on Apple devices, which is what makes the AirPlay route
+   button appear. Other browsers keep using hls.js exactly as before; if Safari
+   refuses a playlist, that one source silently falls back to hls.js.
+2. **The Apple TV has no zer0space session.** In AirPlay's video mode the
+   receiver fetches the playlist and every segment *itself*, from a device that
+   will never carry the session cookie — so the session-gated media relays 401'd
+   and the TV showed black. The dashboard now mints a **short-lived signed token**
+   (`GET /crimson/airplay-token`, 6 h, session-gated, per user); the player
+   appends it to the stream URL, the relays accept it in place of the cookie, and
+   the gateway carries it into the playlist's child links on the way out.
+
+What this needs to work: **redeploy the dashboard *and* this client** — the token
+endpoint lives in the dashboard, the player change lives here, and neither half
+does anything alone.
+
+Caveats worth knowing:
+
+- **iframe sources cannot be AirPlayed** (they're an opaque third-party player).
+  Pick a source chip that is not an embed; the AirPlay button only shows for real
+  HLS/MP4 sources.
+- The token unlocks **only** the `/<name>_proxy` media relays, never the API, the
+  SPA or the dashboard, and it is never appended to a third-party CDN link.
+- Android/Chromecast is *not* covered by this — the same URL is now
+  self-authenticating, so a Cast-capable receiver could fetch it too, but no Cast
+  sender UI is built.
+
 ## Notes
 
 - **Media stays off the tunnel.** Only JSON/NDJSON and the small static SPA pass
