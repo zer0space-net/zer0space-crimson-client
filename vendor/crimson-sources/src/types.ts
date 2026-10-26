@@ -159,6 +159,12 @@ export type FetcherId = "extension" | "proxied" | "direct" | "backend";
 export interface Fetcher {
   readonly id: FetcherId;
   fetch(url: string, opts?: FetchOptions): Promise<FetchResult>;
+  /**
+   * Follow a gated redirect link in a real browser (see ExtensionBridge
+   * `resolveRedirect`). Only present when the host provides it; resolves to the
+   * landing URL, or null when the gate did not open.
+   */
+  resolveGate?(url: string): Promise<string | null>;
   /** Can this fetcher satisfy a source's constraint set? */
   supports(flags: SourceFlags): boolean;
 }
@@ -309,6 +315,17 @@ export interface ExtensionBridge {
     headers?: UpstreamHeaders;
     error?: string;
   }>;
+  /**
+   * Open a link that sits behind an anti-bot gate (s.to's Cloudflare-Turnstile
+   * `/r?t=` redirect) in a real, invisible browser page and report the URL it
+   * finally navigates to off the gate's host. A managed Turnstile passes on its
+   * own in a real browser on a residential/mobile IP. Provided by the zer0space
+   * Android app; absent on the browser extension, so callers must feature-detect.
+   */
+  resolveRedirect?(
+    url: string,
+    opts?: { timeoutMs?: number },
+  ): Promise<{ ok: boolean; url?: string; error?: string }>;
 }
 
 /** Host-supplied configuration. */

@@ -12,3 +12,15 @@ personal token. Vendoring removes that dependency entirely.
 **This code is Crimson Haven's, not zer0space's.** To update it, re-copy `src/`
 (and `contracts/`, `tests/`) from the upstream repo. Everything about how streams
 are resolved is theirs.
+
+## zer0space changes on top of upstream
+
+Kept identical to `zer0space-net/zer0space-crimson-sources`, which carries the
+same patches:
+
+- **Gate follower for s.to (2026-10-26).** `ExtensionBridge.resolveRedirect` +
+  `Fetcher.resolveGate`, used by `sources/sto.ts` when `/r?t=` answers the
+  Turnstile interstitial. Provided only by the zer0space Android app
+  (github.com/zer0space-net/zer0space-android-app), which opens the gate link
+  in a hidden real browser on the phone's own IP. Feature-detected: browsers
+  and the extension behave exactly as before.

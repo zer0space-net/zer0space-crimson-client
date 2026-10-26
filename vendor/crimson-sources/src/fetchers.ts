@@ -15,6 +15,7 @@
  * level — never below today's behavior.
  */
 import type {
+  ExtensionBridge,
   Fetcher,
   FetchOptions,
   FetchResult,
@@ -140,12 +141,26 @@ class ProxiedFetcher implements Fetcher {
 
 class ExtensionFetcher implements Fetcher {
   readonly id = "extension" as const;
+  readonly resolveGate?: (url: string) => Promise<string | null>;
 
   constructor(
     private readonly bridge: {
       fetch(url: string, opts?: FetchOptions): Promise<FetchResult>;
+      resolveRedirect?: ExtensionBridge["resolveRedirect"];
     },
-  ) {}
+  ) {
+    const follow = bridge.resolveRedirect;
+    if (typeof follow === "function") {
+      this.resolveGate = async (url: string) => {
+        try {
+          const r = await follow.call(bridge, url, {});
+          return r && r.ok && r.url ? r.url : null;
+        } catch {
+          return null;
+        }
+      };
+    }
+  }
 
   supports(flags: SourceFlags): boolean {
     // Real browser + DNR header rewrite + host-access CORS: clears C1–C4. But it

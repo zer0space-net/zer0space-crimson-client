@@ -107,25 +107,35 @@ export function makeStoConfig(id: string, base: string): SiteConfig {
     },
 
     async resolveRedirect(redirect: string, fetcher: Fetcher, b: string) {
+      let gated = false;
       try {
         const res = await fetcher.fetch(redirect, { headers: { Referer: b }, redirect: "follow" });
         // Genuine redirect to the hoster (ungated content / the IP mirror).
         if (res.url && hostOf(res.url) !== hostOf(b)) return res.url;
         // Turnstile interstitial: best-effort prepare-POST (recovers ungated hosters).
         if (res.bodyEncoding === "text" && res.body.includes("frameBridge")) {
+          gated = true;
           const token = tokenOf(redirect);
-          if (!token) return null;
-          const post = await fetcher.fetch(`${b}/r`, {
-            method: "POST",
-            headers: { Referer: b, "X-Requested-With": "XMLHttpRequest" },
-            body: `t=${encodeURIComponent(token)}`,
-            redirect: "follow",
-            credentials: "include", // carry the session XSRF cookie if present
-          });
-          if (post.url && hostOf(post.url) !== hostOf(b)) return post.url;
+          if (token) {
+            const post = await fetcher.fetch(`${b}/r`, {
+              method: "POST",
+              headers: { Referer: b, "X-Requested-With": "XMLHttpRequest" },
+              body: `t=${encodeURIComponent(token)}`,
+              redirect: "follow",
+              credentials: "include", // carry the session XSRF cookie if present
+            });
+            if (post.url && hostOf(post.url) !== hostOf(b)) return post.url;
+          }
         }
       } catch {
-        /* captcha-gated or unreachable -> drop this hoster */
+        /* unreachable, or the prepare-POST failed -> maybe the gate below */
+      }
+      // Still gated: when the host can run a real browser page (the zer0space
+      // Android app), let it pass the managed Turnstile on the viewer's own IP
+      // and take the hoster URL it lands on. Elsewhere the hoster is dropped.
+      if (gated && fetcher.resolveGate) {
+        const landed = await fetcher.resolveGate(redirect);
+        if (landed && hostOf(landed) !== hostOf(b)) return landed;
       }
       return null;
     },
